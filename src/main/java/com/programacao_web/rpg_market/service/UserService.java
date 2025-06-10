@@ -107,11 +107,8 @@ public class UserService {
             }
             
             // Atualiza a senha
-            user.setPassword(passwordEncoder.encode(newPassword));
-            userRepository.save(user);
-            System.out.println("Senha alterada com sucesso para o usuário: " + user.getUsername());
+            user.setPassword(passwordEncoder.encode(newPassword));            userRepository.save(user);
         } catch (Exception e) {
-            System.err.println("Erro ao alterar senha: " + e.getMessage());
             throw e;
         }
     }
@@ -152,5 +149,52 @@ public class UserService {
             log.error("Error getting current user profile image: {}", e.getMessage());
         }
         return null;
+    }
+    
+    /**
+     * Deduz moedas de ouro do usuário
+     */
+    @Transactional
+    public void deductGold(User user, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor deve ser positivo");
+        }
+        
+        if (user.getGoldCoins().compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Saldo insuficiente. Saldo atual: " + 
+                user.getGoldCoins() + " moedas de ouro");
+        }
+        
+        user.setGoldCoins(user.getGoldCoins().subtract(amount));
+        userRepository.save(user);
+    }
+    
+    /**
+     * Adiciona moedas de ouro ao usuário
+     */
+    @Transactional
+    public void addGold(User user, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor deve ser positivo");
+        }
+        
+        user.setGoldCoins(user.getGoldCoins().add(amount));
+        userRepository.save(user);
+    }
+    
+    /**
+     * Transfere moedas entre usuários
+     */
+    @Transactional
+    public void transferGold(User from, User to, BigDecimal amount) {
+        deductGold(from, amount);
+        addGold(to, amount);
+    }
+    
+    /**
+     * Verifica se o usuário tem saldo suficiente
+     */
+    public boolean hasSufficientFunds(User user, BigDecimal amount) {
+        return user.getGoldCoins().compareTo(amount) >= 0;
     }
 }

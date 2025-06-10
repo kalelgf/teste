@@ -42,4 +42,13 @@ public class User {
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
+
+    // Método alias para compatibilidade com o sistema de checkout
+    public BigDecimal getGoldBalance() {
+        return goldCoins;
+    }
+    
+    public void setGoldBalance(BigDecimal goldBalance) {
+        this.goldCoins = goldBalance;
+    }
 }

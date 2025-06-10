@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Confirmar Lance - RPG Market</title>
+    <style>
+        .gold-coins {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        .auction-timer {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .bid-summary {
+            background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 100%);
+            border: 2px solid #8B4513;
+        }
+        .current-bid {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .bid-input {
+            border: 2px solid #8B4513;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        .bid-input:focus {
+            border-color: #FFD700;
+            box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h1 class="rpg-font mb-4 text-center">
+                        <i class="fas fa-gavel me-2"></i>Confirmar Lance
+                    </h1>
+                      <!-- Timer do Leilão (se disponível) -->
+                    <div class="auction-timer" th:if="${summary.product.auctionEndDate}">
+                        <h5 class="mb-2"><i class="fas fa-clock me-2"></i>Tempo Restante do Leilão</h5>
+                        <div id="auctionTimer" class="h4 mb-0" 
+                             th:data-end-time="${summary.product.auctionEndDate}">
+                            Calculando...
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Formulário de Lance -->
+                        <div class="col-md-8 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="rpg-font mb-0">
+                                        <i class="fas fa-coins me-2"></i>Informações do Lance
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Item Information -->
+                                    <div class="d-flex align-items-center mb-4">
+                                        <img th:if="${summary.product.imageUrl}" 
+                                             th:src="@{/images/{name}(name=${summary.product.imageUrl})}" 
+                                             class="rounded me-3" width="80" height="80" alt="Produto">
+                                        <img th:unless="${summary.product.imageUrl}" 
+                                             th:src="@{/static/images/default-product.jpg}" 
+                                             class="rounded me-3" width="80" height="80" alt="Produto">
+                                        <div>
+                                            <h5 class="mb-1" th:text="${summary.product.name}">Espada Élfica</h5>
+                                            <p class="mb-1 text-muted" th:text="${summary.seller.username}">Vendedor</p>
+                                            <small class="text-muted" th:text="${summary.product.category?.displayName}">Armas</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Lance Atual -->
+                                    <div class="current-bid mb-4">
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <h6 class="mb-1">Lance Atual</h6>
+                                                <div class="gold-coins h4" th:text="${#numbers.formatDecimal(summary.currentBid ?: 0, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                                    100.00 moedas
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <h6 class="mb-1">Lance Mínimo</h6>
+                                                <div class="text-danger h5" th:text="${#numbers.formatDecimal(summary.minBidAmount, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                                    101.00 moedas
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Formulário do Lance -->
+                                    <form th:action="@{/checkout/confirmar}" method="post" th:object="${request}" id="bidForm">
+                                        <input type="hidden" th:field="*{productId}">
+                                        
+                                        <div class="mb-4">
+                                            <label for="bidAmount" class="form-label h6">Seu Lance (moedas de ouro):</label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text"><i class="fas fa-coins text-warning"></i></span>
+                                                <input type="number" class="form-control bid-input" id="bidAmount" 
+                                                       th:field="*{bidAmount}"
+                                                       th:min="${summary.minBidAmount}"
+                                                       th:value="${summary.minBidAmount}"
+                                                       step="0.01" 
+                                                       required>
+                                            </div>
+                                            <div class="form-text">
+                                                Lance mínimo: <span class="gold-coins" th:text="${#numbers.formatDecimal(summary.minBidAmount, 0, 'POINT', 2, 'COMMA')} + ' moedas'">101.00 moedas</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Saldo do usuário -->
+                                        <div class="alert" th:classappend="${summary.hasSufficientFunds ? 'alert-success' : 'alert-danger'}" id="balanceAlert">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Seu saldo atual:</span>
+                                                <span class="gold-coins h6 mb-0" th:text="${#numbers.formatDecimal(summary.goldBalance, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                                    500.00 moedas
+                                                </span>
+                                            </div>
+                                            <div class="mt-2" id="insufficientFundsWarning" style="display: none;">
+                                                <small><i class="fas fa-exclamation-triangle me-1"></i>Saldo insuficiente para este lance</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Observações -->
+                                        <div class="mb-4">
+                                            <label for="notes" class="form-label">Observações (opcional):</label>
+                                            <textarea class="form-control" th:field="*{notes}" rows="3" 
+                                                      placeholder="Comentários sobre seu lance..."></textarea>
+                                        </div>
+                                        
+                                        <!-- Botões de ação -->
+                                        <div class="d-flex justify-content-between">
+                                            <a th:href="@{/item/{id}(id=${summary.product.id})}" class="btn btn-secondary">
+                                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                                            </a>
+                                            <button type="submit" class="btn btn-gold btn-lg" id="confirmBidBtn">
+                                                <i class="fas fa-gavel me-2"></i>Confirmar Lance
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resumo Lateral -->
+                        <div class="col-md-4">
+                            <div class="card bid-summary">
+                                <div class="card-header">
+                                    <h6 class="rpg-font mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>Informações do Leilão
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6>Incremento Mínimo:</h6>
+                                        <p class="gold-coins" th:text="${#numbers.formatDecimal(summary.product.minBidIncrement ?: 1, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                            1.00 moedas
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="mb-3" th:if="${summary.product.buyNowPrice}">
+                                        <h6>Compre Agora por:</h6>
+                                        <p class="text-success fw-bold" th:text="${#numbers.formatDecimal(summary.product.buyNowPrice, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                            200.00 moedas
+                                        </p>
+                                        <a th:href="@{/checkout/comprar-agora/{id}(id=${summary.product.id})}" 
+                                           class="btn btn-success btn-sm w-100">
+                                            <i class="fas fa-shopping-cart me-2"></i>Comprar Agora
+                                        </a>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="mb-3">
+                                        <h6>Status do Leilão:</h6>
+                                        <span class="badge bg-warning">Ativo</span>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-shield-alt me-2"></i>
+                                        <small>
+                                            <strong>Proteção do Comprador:</strong><br>
+                                            Seu lance é protegido pela Guarda Real. 
+                                            Se você vencer, o pagamento só será liberado após confirmação do recebimento.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div layout:fragment="scripts">
+        <script>
+            // Timer do leilão
+            function updateAuctionTimer() {
+                const timerElement = document.getElementById('auctionTimer');
+                if (!timerElement) return;
+                
+                const endTime = new Date(timerElement.getAttribute('data-end-time'));
+                const now = new Date();
+                const timeLeft = endTime - now;
+                
+                if (timeLeft <= 0) {
+                    timerElement.innerHTML = '<span class="text-warning">Leilão Encerrado</span>';
+                    document.getElementById('bidForm').style.display = 'none';
+                    return;
+                }
+                
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                let timeString = '';
+                if (days > 0) timeString += days + 'd ';
+                timeString += String(hours).padStart(2, '0') + ':' + 
+                             String(minutes).padStart(2, '0') + ':' + 
+                             String(seconds).padStart(2, '0');
+                
+                timerElement.textContent = timeString;
+            }
+            
+            // Atualizar timer a cada segundo
+            setInterval(updateAuctionTimer, 1000);
+            updateAuctionTimer();
+            
+            // Validação do lance
+            const bidInput = document.getElementById('bidAmount');
+            const userBalance = /*[[${summary.goldBalance}]]*/ 500;
+            const minBid = /*[[${summary.minBidAmount}]]*/ 101;
+            const balanceAlert = document.getElementById('balanceAlert');
+            const insufficientWarning = document.getElementById('insufficientFundsWarning');
+            const confirmBtn = document.getElementById('confirmBidBtn');
+            
+            function validateBid() {
+                const bidAmount = parseFloat(bidInput.value) || 0;
+                
+                if (bidAmount < minBid) {
+                    bidInput.setCustomValidity('Lance deve ser pelo menos ' + minBid.toFixed(2) + ' moedas');
+                    confirmBtn.disabled = true;
+                    return false;
+                } else if (bidAmount > userBalance) {
+                    bidInput.setCustomValidity('Saldo insuficiente');
+                    balanceAlert.className = 'alert alert-danger';
+                    insufficientWarning.style.display = 'block';
+                    confirmBtn.disabled = true;
+                    return false;
+                } else {
+                    bidInput.setCustomValidity('');
+                    balanceAlert.className = 'alert alert-success';
+                    insufficientWarning.style.display = 'none';
+                    confirmBtn.disabled = false;
+                    return true;
+                }
+            }
+            
+            bidInput.addEventListener('input', validateBid);
+            bidInput.addEventListener('change', validateBid);
+            
+            // Validação inicial
+            validateBid();
+            
+            // Sugestões de lance rápido
+            function quickBid(amount) {
+                bidInput.value = amount;
+                validateBid();
+            }
+            
+            // Adicionar botões de lance rápido
+            const quickBidContainer = document.createElement('div');
+            quickBidContainer.className = 'mb-3';
+            quickBidContainer.innerHTML = `
+                <label class="form-label">Lance Rápido:</label>
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="quickBid(${minBid})">
+                        Mínimo
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="quickBid(${minBid + 5})">
+                        +5
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="quickBid(${minBid + 10})">
+                        +10
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="quickBid(${minBid + 25})">
+                        +25
+                    </button>
+                </div>
+            `;
+            
+            bidInput.parentNode.parentNode.insertBefore(quickBidContainer, bidInput.parentNode.parentNode.children[2]);
+        </script>
+    </div>
+</body>
+</html>

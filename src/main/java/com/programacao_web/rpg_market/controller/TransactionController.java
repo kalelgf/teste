@@ -43,12 +43,17 @@ public class TransactionController {
         if (transactionOpt.isEmpty()) {
             return "error/404";
         }
+          Transaction transaction = transactionOpt.get();
         
-        Transaction transaction = transactionOpt.get();
+        // Verifica se o usuário é parte da transação (com segurança para DBRef)
+        boolean isBuyer = transaction.getBuyer() != null && 
+                         transaction.getBuyer().getId() != null && 
+                         transaction.getBuyer().getId().equals(user.getId());
+        boolean isSeller = transaction.getSeller() != null && 
+                          transaction.getSeller().getId() != null && 
+                          transaction.getSeller().getId().equals(user.getId());
         
-        // Verifica se o usuário é parte da transação
-        if (!transaction.getBuyer().getId().equals(user.getId()) && 
-            !transaction.getSeller().getId().equals(user.getId())) {
+        if (!isBuyer && !isSeller) {
             return "error/403";
         }
         

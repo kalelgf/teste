@@ -39,7 +39,7 @@
                     <div class="product-img-container">
                         <img th:if="${product.imageUrl}" th:src="@{/images/{name}(name=${product.imageUrl})}" class="product-img" alt="Imagem do Produto">
                         <img th:unless="${product.imageUrl}" th:src="@{/images/default-product.jpg}" class="product-img" alt="Imagem Padrão">
-                        <span class="badge product-category-badge bg-dark" th:text="${product.category.displayName}">Categoria</span>
+                        <span class="badge product-category-badge bg-dark" th:text="${product.category != null ? product.category.displayName : 'Sem categoria'}">Categoria</span>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title rpg-font" th:text="${product.name}">Nome do Produto</h5>

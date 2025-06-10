@@ -37,7 +37,12 @@ public class Transaction {
     
     @Field("completed_at")
     private LocalDateTime completedAt;
-    
-    @Field("tracking_code")
+      @Field("tracking_code")
     private String trackingCode;
+    
+    @DBRef
+    private DeliveryAddress deliveryAddress;
+    
+    @Field("notes")
+    private String notes; // Observações da compra
 }

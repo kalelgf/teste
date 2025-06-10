@@ -67,8 +67,7 @@ public class ProductService {
             product.setStatus(ProductStatus.AUCTION_ACTIVE);
         }
         
-        return productRepository.save(product);
-    }
+        return productRepository.save(product);    }
     
     /**
      * Busca um produto pelo ID
@@ -493,5 +492,13 @@ public class ProductService {
         
         // Retornar Page
         return new PageImpl<>(auctions, pageable, total);
+    }
+
+    /**
+     * Salva um produto
+     */
+    @Transactional
+    public Product save(Product product) {
+        return productRepository.save(product);
     }
 }

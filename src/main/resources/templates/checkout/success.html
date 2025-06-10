@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Compra Confirmada - RPG Market</title>
+    <style>
+        .success-animation {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .gold-coins {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .medieval-seal {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #FFD700 0%, #8B4513 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin: 0 auto 20px;
+            animation: bounce 1s ease-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .parchment-bg {
+            background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 100%);
+            border: 3px solid #8B4513;
+            position: relative;
+        }
+        
+        .parchment-bg::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #8B4513, #D2691E);
+            z-index: -1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="text-center success-animation">
+                        <div class="medieval-seal">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        
+                        <h1 class="rpg-font text-success mb-4">
+                            Compra Realizada com Sucesso!
+                        </h1>
+                        
+                        <p class="lead mb-4">
+                            Sua transação foi processada e as moedas de ouro foram transferidas. 
+                            O vendedor foi notificado e em breve preparará seu item para envio.
+                        </p>
+                    </div>
+                    
+                    <!-- Detalhes da Transação -->
+                    <div class="card parchment-bg mb-4 success-animation" style="animation-delay: 0.3s;">
+                        <div class="card-header text-center">
+                            <h4 class="rpg-font mb-0">
+                                <i class="fas fa-scroll me-2"></i>Pergaminho da Transação
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-hashtag me-2"></i>ID da Transação:</h6>
+                                    <p class="fw-bold" th:text="${transaction.id}">#TXN-123456</p>
+                                    
+                                    <h6><i class="fas fa-calendar me-2"></i>Data da Compra:</h6>
+                                    <p th:text="${#temporals.format(transaction.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                        07/06/2025 14:30
+                                    </p>
+                                    
+                                    <h6><i class="fas fa-coins me-2"></i>Valor Pago:</h6>
+                                    <p class="gold-coins h5" th:text="${#numbers.formatDecimal(transaction.amount, 0, 'POINT', 2, 'COMMA')} + ' moedas de ouro'">
+                                        150.00 moedas de ouro
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-box me-2"></i>Item Adquirido:</h6>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <img th:if="${transaction.product.imageUrl}" 
+                                             th:src="@{/images/{name}(name=${transaction.product.imageUrl})}" 
+                                             class="rounded me-3" width="60" height="60" alt="Produto">
+                                        <img th:unless="${transaction.product.imageUrl}" 
+                                             th:src="@{/static/images/default-product.jpg}" 
+                                             class="rounded me-3" width="60" height="60" alt="Produto">
+                                        <div>
+                                            <h6 class="mb-0" th:text="${transaction.product.name}">Espada Élfica</h6>
+                                            <small class="text-muted" th:text="${transaction.product.category?.displayName}">Armas</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6><i class="fas fa-user me-2"></i>Vendedor:</h6>
+                                    <p th:text="${transaction.seller.username}">ArtesãoMágico</p>
+                                    
+                                    <h6><i class="fas fa-info-circle me-2"></i>Status:</h6>
+                                    <span class="badge bg-warning" th:text="${transaction.status.displayName}">
+                                        Aguardando Envio
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Endereço de Entrega -->
+                    <div class="card mb-4 success-animation" style="animation-delay: 0.6s;" th:if="${transaction.deliveryAddress}">
+                        <div class="card-header">
+                            <h5 class="rpg-font mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>Endereço de Entrega
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <address>
+                                        <strong th:text="${transaction.deliveryAddress.description ?: 'Endereço de Entrega'}">Casa</strong><br>
+                                        <span th:text="${transaction.deliveryAddress.street + ', ' + transaction.deliveryAddress.number}">
+                                            Rua das Flores, 123
+                                        </span><br>
+                                        <span th:if="${transaction.deliveryAddress.complement}" 
+                                              th:text="${transaction.deliveryAddress.complement}">Apto 456</span><br>
+                                        <span th:text="${transaction.deliveryAddress.district + ' - ' + transaction.deliveryAddress.city + '/' + transaction.deliveryAddress.state}">
+                                            Centro - São Paulo/SP
+                                        </span><br>
+                                        <span th:text="${transaction.deliveryAddress.postalCode}">01234-567</span>
+                                    </address>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="showDeliveryMap()">
+                                        <i class="fas fa-map me-2"></i>Ver no Mapa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Próximos Passos -->
+                    <div class="card mb-4 success-animation" style="animation-delay: 0.9s;">
+                        <div class="card-header">
+                            <h5 class="rpg-font mb-0">
+                                <i class="fas fa-list-ol me-2"></i>Próximos Passos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-bell me-2 text-info"></i>Notificação ao Vendedor</h6>
+                                    <p class="small">O vendedor foi notificado da compra e tem até 3 dias para processar o pedido.</p>
+                                    
+                                    <h6><i class="fas fa-shipping-fast me-2 text-warning"></i>Preparação do Envio</h6>
+                                    <p class="small">O vendedor preparará seu item e fornecerá o código de rastreamento.</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-truck me-2 text-primary"></i>Acompanhar Entrega</h6>
+                                    <p class="small">Você receberá o código de rastreamento para acompanhar sua encomenda.</p>
+                                    
+                                    <h6><i class="fas fa-handshake me-2 text-success"></i>Confirmar Recebimento</h6>
+                                    <p class="small">Após receber o item, confirme o recebimento para liberar o pagamento ao vendedor.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ações -->
+                    <div class="text-center success-animation" style="animation-delay: 1.2s;">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a th:href="@{/transacao/{id}(id=${transaction.id})}" class="btn btn-gold btn-lg me-md-2">
+                                <i class="fas fa-eye me-2"></i>Acompanhar Pedido
+                            </a>
+                            <a th:href="@{/aventureiro/compras}" class="btn btn-outline-primary btn-lg me-md-2">
+                                <i class="fas fa-shopping-bag me-2"></i>Minhas Compras
+                            </a>
+                            <a th:href="@{/mercado}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-store me-2"></i>Continuar Comprando
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <p class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Sua compra está protegida pela <strong>Guarda Real do RPG Market</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal do Mapa -->
+        <div class="modal fade" id="deliveryMapModal" tabindex="-1" aria-labelledby="deliveryMapModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deliveryMapModalLabel">
+                            <i class="fas fa-map-marker-alt me-2"></i>Localização de Entrega
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="deliveryMap" style="height: 400px; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div layout:fragment="scripts">        <script async defer 
+                src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDM6lMBKSWgsRJmWwuGFJ9UR3X9ZdL8AYc&callback=initDeliveryMap&libraries=geometry">
+        </script>
+          <script th:inline="javascript">
+            let deliveryMap;
+            let deliveryMarker;
+            
+            function initDeliveryMap() {
+                // Inicialização será feita quando o modal for aberto
+            }
+            
+            function showDeliveryMap() {
+                const modal = new bootstrap.Modal(document.getElementById('deliveryMapModal'));
+                modal.show();
+                
+                // Aguarda um pouco para o modal aparecer antes de inicializar o mapa
+                setTimeout(() => {
+                    const lat = [[${transaction.deliveryAddress?.latitude ?: -23.5505}]];
+                    const lng = [[${transaction.deliveryAddress?.longitude ?: -46.6333}]];
+                    const location = { lat: lat, lng: lng };
+                    
+                    deliveryMap = new google.maps.Map(document.getElementById('deliveryMap'), {
+                        zoom: 15,
+                        center: location,
+                        styles: [
+                            {
+                                featureType: 'all',
+                                elementType: 'geometry.fill',
+                                stylers: [{ color: '#F5DEB3' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#4682B4' }]
+                            }
+                        ]
+                    });
+                    
+                    deliveryMarker = new google.maps.Marker({
+                        position: location,
+                        map: deliveryMap,
+                        title: 'Local de Entrega',
+                        icon: {
+                            url: '/static/images/delivery-marker.png',
+                            scaledSize: new google.maps.Size(40, 40)
+                        }
+                    });
+                    
+                    const deliveryAddress = [[${transaction.deliveryAddress?.street + ', ' + transaction.deliveryAddress?.number}]];
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div class="p-2">
+                                <h6>Local de Entrega</h6>
+                                <p class="mb-0 small">${deliveryAddress}</p>
+                            </div>
+                        `
+                    });
+                    
+                    deliveryMarker.addListener('click', () => {
+                        infoWindow.open(deliveryMap, deliveryMarker);
+                    });
+                }, 500);
+            }
+        </script>
+    </div>
+</body>
+</html>

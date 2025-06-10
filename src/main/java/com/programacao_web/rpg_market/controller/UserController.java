@@ -2,8 +2,10 @@ package com.programacao_web.rpg_market.controller;
 
 import com.programacao_web.rpg_market.model.Product;
 import com.programacao_web.rpg_market.model.User;
+import com.programacao_web.rpg_market.model.DeliveryAddress;
 import com.programacao_web.rpg_market.service.ProductService;
 import com.programacao_web.rpg_market.service.UserService;
+import com.programacao_web.rpg_market.service.DeliveryAddressService;
 import com.programacao_web.rpg_market.dto.PasswordChangeRequest;
 import com.programacao_web.rpg_market.service.FileStorageService;
 import com.programacao_web.rpg_market.service.CustomUserDetailsService;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,9 +42,11 @@ public class UserController {
     
     @Autowired
     private FileStorageService fileStorageService;
+      @Autowired
+    private CustomUserDetailsService customUserDetailsService;
     
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private DeliveryAddressService deliveryAddressService;
     
     // Adicionar este método na classe UserController
     private void refreshAuthentication(User user) {
@@ -72,13 +77,8 @@ public class UserController {
             }
             
             userService.registerUser(user);
-            redirectAttributes.addFlashAttribute("success", "Conta criada com sucesso!");
-            return "redirect:/login";
+            redirectAttributes.addFlashAttribute("success", "Conta criada com sucesso!");            return "redirect:/login";
         } catch (Exception e) {
-            // Log the error for server-side troubleshooting
-            System.err.println("Erro ao registrar usuário: " + e.getMessage());
-            e.printStackTrace();
-            
             // Provide a user-friendly error message
             String errorMessage = e.getMessage();
             if (errorMessage.contains("Username já existe")) {
@@ -127,8 +127,7 @@ public class UserController {
         // Retorne diretamente para a página inventory
         return "user/inventory";
     }
-    
-    // Exibe as compras realizadas pelo usuário
+      // Exibe as compras realizadas pelo usuário
     @GetMapping("/compras")
     public String showUserPurchases(@AuthenticationPrincipal UserDetails currentUser, Model model) {
         userService.findByUsername(currentUser.getUsername()).ifPresent(user -> {
@@ -242,7 +241,166 @@ public class UserController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+          return "redirect:/aventureiro/perfil";
+    }
+    
+    // === ADDRESS MANAGEMENT ENDPOINTS ===
+    
+    // Display user addresses
+    @GetMapping("/enderecos")
+    public String showAddresses(@AuthenticationPrincipal UserDetails currentUser, Model model) {        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+        if (userOpt.isEmpty()) {
+            return "error/403";
+        }
         
-        return "redirect:/aventureiro/perfil";
+        User user = userOpt.get();
+        List<DeliveryAddress> addresses = deliveryAddressService.findByUserId(user.getId());
+        model.addAttribute("addresses", addresses);
+        model.addAttribute("user", user);
+        
+        return "user/addresses";
+    }
+    
+    // Show form to add new address
+    @GetMapping("/enderecos/novo")
+    public String showAddAddressForm(@AuthenticationPrincipal UserDetails currentUser, Model model) {
+        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+        if (userOpt.isEmpty()) {
+            return "error/403";
+        }
+        
+        model.addAttribute("address", new DeliveryAddress());
+        model.addAttribute("isEdit", false);
+        
+        return "user/address-form";
+    }
+    
+    // Process new address creation
+    @PostMapping("/enderecos/novo")
+    public String createAddress(
+            @ModelAttribute DeliveryAddress address,
+            @AuthenticationPrincipal UserDetails currentUser,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+            if (userOpt.isEmpty()) {
+                return "error/403";
+            }
+              User user = userOpt.get();
+            address.setUserId(user.getId());
+            
+            // If this is the user's first address, make it default
+            if (deliveryAddressService.countByUserId(user.getId()) == 0) {
+                address.setIsDefault(true);
+            }
+            
+            deliveryAddressService.save(address);
+            redirectAttributes.addFlashAttribute("success", "Endereço adicionado com sucesso!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao salvar endereço: " + e.getMessage());
+        }
+        
+        return "redirect:/aventureiro/enderecos";
+    }
+    
+    // Show form to edit existing address
+    @GetMapping("/enderecos/{addressId}/editar")
+    public String showEditAddressForm(
+            @PathVariable String addressId,
+            @AuthenticationPrincipal UserDetails currentUser,
+            Model model) {
+        
+        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());        if (userOpt.isEmpty()) {
+            return "error/403";
+        }
+        
+        User user = userOpt.get();
+        Optional<DeliveryAddress> addressOpt = deliveryAddressService.findByIdAndUserId(addressId, user.getId());
+        
+        if (addressOpt.isEmpty()) {
+            return "error/404";
+        }
+        
+        model.addAttribute("address", addressOpt.get());
+        model.addAttribute("isEdit", true);
+        
+        return "user/address-form";
+    }
+    
+    // Process address update
+    @PostMapping("/enderecos/{addressId}/editar")
+    public String updateAddress(
+            @PathVariable String addressId,
+            @ModelAttribute DeliveryAddress updatedAddress,
+            @AuthenticationPrincipal UserDetails currentUser,
+            RedirectAttributes redirectAttributes) {
+        
+        try {            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+            if (userOpt.isEmpty()) {
+                return "error/403";
+            }
+            
+            User user = userOpt.get();
+            deliveryAddressService.update(addressId, updatedAddress);
+            redirectAttributes.addFlashAttribute("success", "Endereço atualizado com sucesso!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao atualizar endereço: " + e.getMessage());
+        }
+        
+        return "redirect:/aventureiro/enderecos";
+    }
+    
+    // Delete address
+    @PostMapping("/enderecos/{addressId}/deletar")
+    public String deleteAddress(
+            @PathVariable String addressId,
+            @AuthenticationPrincipal UserDetails currentUser,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+            if (userOpt.isEmpty()) {            return "error/403";
+            }
+            
+            User user = userOpt.get();
+            boolean deleted = deliveryAddressService.deleteByIdAndUserId(addressId, user.getId());
+            
+            if (deleted) {
+                redirectAttributes.addFlashAttribute("success", "Endereço removido com sucesso!");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Endereço não encontrado.");
+            }
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao remover endereço: " + e.getMessage());
+        }
+        
+        return "redirect:/aventureiro/enderecos";
+    }
+    
+    // Set address as default
+    @PostMapping("/enderecos/{addressId}/padrao")
+    public String setAsDefaultAddress(
+            @PathVariable String addressId,
+            @AuthenticationPrincipal UserDetails currentUser,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+            if (userOpt.isEmpty()) {            return "error/403";
+            }
+            
+            User user = userOpt.get();
+            deliveryAddressService.setAsDefault(addressId, user.getId());
+            redirectAttributes.addFlashAttribute("success", "Endereço definido como padrão!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao definir endereço padrão: " + e.getMessage());
+        }
+        
+        return "redirect:/aventureiro/enderecos";
     }
 }

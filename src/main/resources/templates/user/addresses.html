@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Meus Endereços - RPG Market</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container mt-4">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/mercado}" class="text-gold">Mercado</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/aventureiro/perfil}" class="text-gold">Perfil</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Endereços</li>
+                </ol>
+            </nav>
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="rpg-font">
+                    <i class="fas fa-map-marker-alt me-2"></i>Meus Endereços
+                </h1>
+                <a th:href="@{/aventureiro/enderecos/novo}" class="btn btn-gold">
+                    <i class="fas fa-plus me-2"></i>Adicionar Endereço
+                </a>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Addresses List -->
+            <div class="row">
+                <div class="col-12">
+                    <div th:if="${#lists.isEmpty(addresses)}" class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-map-marker-alt fa-3x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">Nenhum endereço cadastrado</h4>
+                        <p class="text-muted">Adicione um endereço para facilitar suas compras e entregas.</p>
+                        <a th:href="@{/aventureiro/enderecos/novo}" class="btn btn-gold">
+                            <i class="fas fa-plus me-2"></i>Adicionar Primeiro Endereço
+                        </a>
+                    </div>
+
+                    <div th:if="${!#lists.isEmpty(addresses)}" class="row">
+                        <div class="col-lg-6 col-xl-4 mb-4" th:each="address : ${addresses}">
+                            <div class="card h-100 address-card" th:classappend="${address.isDefault} ? 'border-gold shadow-sm' : ''">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-home me-2"></i>
+                                        <span th:text="${address.description ?: 'Endereço'}"></span>
+                                    </h6>
+                                    <span th:if="${address.isDefault}" class="badge bg-gold text-dark">Padrão</span>
+                                </div>
+                                <div class="card-body">
+                                    <address class="mb-3">
+                                        <strong th:text="${address.street + ', ' + address.number}"></strong><br>
+                                        <span th:if="${address.complement}" th:text="${address.complement}"></span>
+                                        <span th:if="${address.complement}"><br></span>
+                                        <span th:text="${address.district}"></span><br>
+                                        <span th:text="${address.city + ' - ' + address.state}"></span><br>
+                                        <span th:text="${address.postalCode}"></span>
+                                    </address>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="btn-group w-100" role="group">
+                                        <a th:href="@{/aventureiro/enderecos/{id}/editar(id=${address.id})}" 
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit me-1"></i>Editar
+                                        </a>
+                                        
+                                        <form th:if="${!address.isDefault}" 
+                                              th:action="@{/aventureiro/enderecos/{id}/padrao(id=${address.id})}" 
+                                              method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-gold">
+                                                <i class="fas fa-star me-1"></i>Definir Padrão
+                                            </button>
+                                        </form>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                th:data-bs-target="'#deleteModal-' + ${address.id}">
+                                            <i class="fas fa-trash me-1"></i>Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" th:id="'deleteModal-' + ${address.id}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Tem certeza que deseja excluir este endereço?</p>
+                                            <address class="text-muted">
+                                                <strong th:text="${address.description ?: 'Endereço'}"></strong><br>
+                                                <span th:text="${address.street + ', ' + address.number}"></span><br>
+                                                <span th:text="${address.city + ' - ' + address.state}"></span>
+                                            </address>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <form th:action="@{/aventureiro/enderecos/{id}/deletar(id=${address.id})}" 
+                                                  method="post" style="display: inline;">
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash me-1"></i>Excluir
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Profile -->
+            <div class="text-center mt-4">
+                <a th:href="@{/aventureiro/perfil}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar ao Perfil
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="pageStyles">
+        <style>
+            .address-card {
+                transition: transform 0.2s ease-in-out;
+            }
+            
+            .address-card:hover {
+                transform: translateY(-2px);
+            }
+            
+            .border-gold {
+                border-color: var(--rpg-gold) !important;
+                border-width: 2px !important;
+            }
+            
+            .btn-outline-gold {
+                color: var(--rpg-gold);
+                border-color: var(--rpg-gold);
+            }
+            
+            .btn-outline-gold:hover {
+                color: #000;
+                background-color: var(--rpg-gold);
+                border-color: var(--rpg-gold);
+            }        </style>
+    </th:block>
+</body>
+</html>

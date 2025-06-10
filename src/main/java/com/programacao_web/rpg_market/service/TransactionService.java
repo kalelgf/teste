@@ -1,9 +1,11 @@
 package com.programacao_web.rpg_market.service;
 
+import com.programacao_web.rpg_market.model.DeliveryAddress;
 import com.programacao_web.rpg_market.model.Product;
 import com.programacao_web.rpg_market.model.Transaction;
 import com.programacao_web.rpg_market.model.TransactionStatus;
 import com.programacao_web.rpg_market.model.User;
+import com.programacao_web.rpg_market.model.DeliveryAddress;
 import com.programacao_web.rpg_market.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,31 @@ public class TransactionService {
     }
     
     /**
+     * Cria uma nova transação com endereço de entrega e observações
+     */
+    @Transactional
+    public Transaction createTransaction(Product product, User buyer, User seller, BigDecimal amount, 
+                                       DeliveryAddress deliveryAddress, String notes) {
+        Transaction transaction = new Transaction();
+        transaction.setProduct(product);
+        transaction.setBuyer(buyer);
+        transaction.setSeller(seller);
+        transaction.setAmount(amount);
+        transaction.setStatus(TransactionStatus.PENDING);
+        transaction.setCreatedAt(LocalDateTime.now());
+        transaction.setDeliveryAddress(deliveryAddress);
+        transaction.setNotes(notes);
+        
+        transaction = transactionRepository.save(transaction);
+        
+        // Dá experiência para comprador e vendedor
+        userService.addExperience(buyer, 10);
+        userService.addExperience(seller, 15);
+        
+        return transaction;
+    }
+    
+    /**
      * Atualiza o status de uma transação (versão simplificada)
      */
     @Transactional
@@ -57,13 +84,16 @@ public class TransactionService {
         
         Transaction transaction = transactionOpt.get();
         transaction.setStatus(newStatus);
-        
-        if (newStatus == TransactionStatus.COMPLETED) {
+          if (newStatus == TransactionStatus.COMPLETED) {
             transaction.setCompletedAt(LocalDateTime.now());
             
-            // Experiência extra ao completar
-            userService.addExperience(transaction.getBuyer(), 5);
-            userService.addExperience(transaction.getSeller(), 5);
+            // Experiência extra ao completar - com verificação de null
+            if (transaction.getBuyer() != null) {
+                userService.addExperience(transaction.getBuyer(), 5);
+            }
+            if (transaction.getSeller() != null) {
+                userService.addExperience(transaction.getSeller(), 5);
+            }
         }
         
         return transactionRepository.save(transaction);
@@ -101,10 +131,13 @@ public class TransactionService {
         }
         
         Transaction transaction = transactionOpt.get();
-        
-        // Verificar permissões
-        boolean isSeller = transaction.getSeller().getId().equals(requestingUser.getId());
-        boolean isBuyer = transaction.getBuyer().getId().equals(requestingUser.getId());
+          // Verificar permissões
+        boolean isSeller = transaction.getSeller() != null && 
+                          transaction.getSeller().getId() != null && 
+                          transaction.getSeller().getId().equals(requestingUser.getId());
+        boolean isBuyer = transaction.getBuyer() != null && 
+                         transaction.getBuyer().getId() != null && 
+                         transaction.getBuyer().getId().equals(requestingUser.getId());
         
         if (!isSeller && !isBuyer) {
             throw new IllegalArgumentException("Você não tem permissão para atualizar esta transação");
@@ -134,9 +167,10 @@ public class TransactionService {
         }
         
         Transaction transaction = transactionOpt.get();
-        
-        // Verifica se o usuário é o vendedor
-        if (!transaction.getSeller().getId().equals(seller.getId())) {
+          // Verifica se o usuário é o vendedor
+        if (transaction.getSeller() == null || 
+            transaction.getSeller().getId() == null || 
+            !transaction.getSeller().getId().equals(seller.getId())) {
             throw new IllegalArgumentException("Apenas o vendedor pode adicionar código de rastreio");
         }
         
@@ -157,9 +191,10 @@ public class TransactionService {
         }
         
         Transaction transaction = transactionOpt.get();
-        
-        // Verifica se o usuário é o comprador
-        if (!transaction.getBuyer().getId().equals(buyer.getId())) {
+          // Verifica se o usuário é o comprador
+        if (transaction.getBuyer() == null || 
+            transaction.getBuyer().getId() == null || 
+            !transaction.getBuyer().getId().equals(buyer.getId())) {
             throw new IllegalArgumentException("Apenas o comprador pode confirmar o recebimento");
         }
         
@@ -187,9 +222,10 @@ public class TransactionService {
         }
         
         Transaction transaction = transactionOpt.get();
-        
-        // Verifica se o usuário é o comprador
-        if (!transaction.getBuyer().getId().equals(buyer.getId())) {
+          // Verifica se o usuário é o comprador
+        if (transaction.getBuyer() == null || 
+            transaction.getBuyer().getId() == null || 
+            !transaction.getBuyer().getId().equals(buyer.getId())) {
             throw new IllegalArgumentException("Apenas o comprador pode abrir uma disputa");
         }
         

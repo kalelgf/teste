@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
 <head>
     <title>Detalhes da Transação - RPG Market</title>
 </head>
 <body>
-    <div th:replace="~{layout/main :: content}">
+    <div layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="rpg-font">
                 <i class="fas fa-exchange-alt me-2"></i>
@@ -39,10 +43,9 @@
                                             <div class="me-3" style="width: 80px; height: 80px; overflow: hidden; border-radius: 4px;">
                                                 <img th:if="${transaction.product.imageUrl}" th:src="@{/images/{name}(name=${transaction.product.imageUrl})}" alt="Imagem do Produto" class="img-fluid">
                                                 <img th:unless="${transaction.product.imageUrl}" th:src="@{/images/default-product.jpg}" alt="Imagem Padrão" class="img-fluid">
-                                            </div>
-                                            <div>
+                                            </div>                                            <div>
                                                 <h6 class="mb-1"><a th:href="@{/item/{id}(id=${transaction.product.id})}" th:text="${transaction.product.name}" class="text-decoration-none">Nome do Item</a></h6>
-                                                <p class="mb-1 small text-muted" th:text="${transaction.product.category.displayName}">Categoria</p>
+                                                <p class="mb-1 small text-muted" th:text="${transaction.product.category != null ? transaction.product.category.displayName : 'Sem categoria'}">Categoria</p>
                                                 <span class="product-price" th:text="${'$' + #numbers.formatDecimal(transaction.amount, 0, 'POINT', 2, 'COMMA')}">$99.99</span>
                                             </div>
                                         </div>
@@ -169,13 +172,13 @@
                             
                             <!-- Mostrar mensagem se em disputa -->
                             <div th:if="${transaction.status.name() == 'DISPUTED'}" class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Disputa aberta! Um mestre irá analisar.
+                <i class="fas fa-exclamation-triangle me-2"></i>Disputa aberta! Um mestre irá analisar.
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </div> <!-- end content fragment -->
 </body>
 </html>

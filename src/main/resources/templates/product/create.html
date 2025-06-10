@@ -286,9 +286,7 @@
         <script th:src="@{/js/script.js}"></script>
         
         <!-- Add additional script for rarity selection -->
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log("Form initialization starting...");
+        <script>            document.addEventListener('DOMContentLoaded', function() {
                 
                 // Get DOM elements
                 const typeSelect = document.getElementById('type');
@@ -306,11 +304,9 @@
                         submitBtn.disabled = false;
                     });
                 }
-                
-                // Handle form type switching
+                  // Handle form type switching
                 if (typeSelect) {
                     typeSelect.addEventListener('change', function() {
-                        console.log("Type changed to:", this.value);
                         
                         if (this.value === 'AUCTION') {
                             // Show auction fields, hide direct sale fields
@@ -346,21 +342,17 @@
                 }
                 
                 // Handle direct sale price changes
-                if (directSalePriceField) {
-                    directSalePriceField.addEventListener('input', function() {
+                if (directSalePriceField) {                    directSalePriceField.addEventListener('input', function() {
                         priceField.value = this.value;
                         updatePricePreview(this.value);
-                        console.log("Updated price to:", this.value);
                     });
                 }
                 
                 // Handle starting bid changes
-                if (startingBidField) {
-                    startingBidField.addEventListener('input', function() {
+                if (startingBidField) {                    startingBidField.addEventListener('input', function() {
                         // Update the hidden price field immediately
                         priceField.value = this.value;
                         updatePricePreview(this.value);
-                        console.log("Updated starting bid to:", this.value);
                     });
                 }
                 

@@ -19,10 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('countdown')) {
         updateAuctionCountdown();
     }
-    
-    // Initialize all countdowns in inventory
+      // Initialize all countdowns in inventory
     const inventoryCountdowns = document.querySelectorAll('.countdown');
-    console.log('Found ' + inventoryCountdowns.length + ' countdown elements');
     
     if (inventoryCountdowns.length > 0) {
         updateAllCountdowns();
@@ -164,14 +162,10 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             
             // Toggle simples da classe show
-            if (userDropdownMenu.classList.contains('show')) {
-                userDropdownMenu.classList.remove('show');
-                userDropdown.setAttribute('aria-expanded', 'false');
-                console.log("Dropdown fechado");
-            } else {
-                userDropdownMenu.classList.add('show');
-                userDropdown.setAttribute('aria-expanded', 'true');
-                console.log("Dropdown aberto");
+            if (userDropdownMenu.classList.contains('show')) {            userDropdownMenu.classList.remove('show');
+            userDropdown.setAttribute('aria-expanded', 'false');
+            } else {            userDropdownMenu.classList.add('show');
+            userDropdown.setAttribute('aria-expanded', 'true');
             }
         });
         

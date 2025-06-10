@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
 <head>
     <title>Minhas Compras - RPG Market</title>
 </head>
 <body>
-    <div th:replace="~{layout/main :: content}">
+    <div layout:fragment="content">
         <h1 class="rpg-font mb-4"><i class="fas fa-shopping-bag me-2"></i>Minhas Compras</h1>
         
         <div class="table-responsive" th:if="${!transactions.isEmpty()}">
@@ -50,8 +53,7 @@
                 </tbody>
             </table>
         </div>
-        
-        <div th:if="${transactions.isEmpty()}" class="inventory-empty">
+          <div th:if="${transactions.isEmpty()}" class="inventory-empty">
             <i class="fas fa-shopping-bag mb-3"></i>
             <h4>Você ainda não fez nenhuma compra</h4>
             <p class="text-muted">Suas compras aparecerão aqui!</p>
@@ -59,6 +61,6 @@
                 <i class="fas fa-store me-2"></i>Ir para o Mercado
             </a>
         </div>
-    </div>
+    </div> <!-- end content fragment -->
 </body>
 </html>

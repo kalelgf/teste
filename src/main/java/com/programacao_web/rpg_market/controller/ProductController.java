@@ -28,16 +28,8 @@ public class ProductController {
     
     @Autowired
     private UserService userService;
-    
-    @Autowired
+      @Autowired
     private FileStorageService fileStorageService;
-    
-    // Test endpoint to verify controller mapping is working
-    @GetMapping("/test")
-    @ResponseBody
-    public String testEndpoint() {
-        return "ProductController is working!";
-    }
     
     // Exibe formulário para criar um novo produto com dados enriquecidos
     @GetMapping("/novo")
@@ -50,12 +42,8 @@ public class ProductController {
             
             // Add information about magic properties if used in template
             model.addAttribute("magicProperties", MagicProperty.values());
-            
-            return "product/create";
+              return "product/create";
         } catch (Exception e) {
-            // Log exception details
-            System.err.println("Error in showCreateProductForm: " + e.getMessage());
-            e.printStackTrace();
             throw e; // Rethrow to see the error in browser
         }
     }
@@ -91,12 +79,8 @@ public class ProductController {
                     redirectAttributes.addFlashAttribute("error", "Por favor, informe um lance inicial válido para leilão.");
                     return "redirect:/item/novo";
                 }
-                
-                // Garantir que o preço é definido para leilões
+                  // Garantir que o preço é definido para leilões
                 product.setPrice(startingBid);
-                
-                // Adicionar log para debug
-                System.out.println("Leilão criado com lance inicial de: " + startingBid);
             }
             
             // Processa a imagem do item
@@ -144,76 +128,97 @@ public class ProductController {
             return "redirect:/item/novo";
         }
     }
-    
-    // Exibe detalhes de um produto
+      // Exibe detalhes de um produto
     @GetMapping("/{id}")
-    public String showProduct(@PathVariable String id, Model model) {
+    public String showProduct(@PathVariable String id, Model model, 
+                            @AuthenticationPrincipal UserDetails currentUser) {
         Optional<Product> productOpt = productService.findById(id);
         if (productOpt.isEmpty()) {
             return "error/404"; // Página não encontrada
         }
         
-        model.addAttribute("product", productOpt.get());
+        Product product = productOpt.get();
+        model.addAttribute("product", product);
+        
+        // Verifica se o produto foi vendido e se o usuário atual é o vendedor
+        if (product.getStatus() == ProductStatus.SOLD || 
+            product.getStatus() == ProductStatus.AUCTION_ENDED) {
+            
+            // Se há usuário logado, verifica se é o vendedor
+            if (currentUser != null) {
+                // Permite que o vendedor veja seus próprios itens vendidos
+                Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+                if (userOpt.isPresent() && 
+                    product.getSeller().getId().equals(userOpt.get().getId())) {
+                    model.addAttribute("isOwner", true);
+                }
+            }
+            
+            // Para produtos vendidos, ainda mostra a página mas com indicação clara
+            model.addAttribute("isSold", true);
+        }
         
         // Se for leilão, busca os lances
-        if (productOpt.get().getType() == ProductType.AUCTION) {
-            model.addAttribute("bids", productService.getProductBids(productOpt.get()));
+        if (product.getType() == ProductType.AUCTION) {
+            model.addAttribute("bids", productService.getProductBids(product));
         }
         
         return "product/details";
     }
     
-    // Processa a compra direta de um produto
+    /**
+     * Inicia processo de compra - redireciona para checkout
+     */
     @PostMapping("/{id}/comprar")
-    public String buyProduct(
+    public String startPurchase(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
         
         try {
+            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
             Optional<Product> productOpt = productService.findById(id);
-            Optional<User> buyerOpt = userService.findByUsername(currentUser.getUsername());
             
-            if (productOpt.isEmpty() || buyerOpt.isEmpty()) {
+            if (userOpt.isEmpty() || productOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Produto ou usuário não encontrado");
                 return "redirect:/item/" + id;
             }
             
-            productService.buyNow(productOpt.get(), buyerOpt.get());
-            redirectAttributes.addFlashAttribute("success", "Compra realizada com sucesso!");
-            return "redirect:/aventureiro/compras";
+            Product product = productOpt.get();
+            User buyer = userOpt.get();
             
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            // Verificações básicas
+            if (buyer.getId().equals(product.getSeller().getId())) {
+                redirectAttributes.addFlashAttribute("error", "Você não pode comprar seu próprio item");
+                return "redirect:/item/" + id;
+            }
+            
+            if (product.getType() == ProductType.DIRECT_SALE) {
+                return "redirect:/checkout/comprar/" + id;
+            } else if (product.getType() == ProductType.AUCTION && product.getBuyNowPrice() != null) {
+                return "redirect:/checkout/comprar-agora/" + id;
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Este item não está disponível para compra direta");
+                return "redirect:/item/" + id;
+            }
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao processar compra: " + e.getMessage());
             return "redirect:/item/" + id;
         }
     }
     
-    // Processa um lance em um leilão
+    /**
+     * Processa lance em leilão - redireciona para checkout
+     */
     @PostMapping("/{id}/lance")
-    public String makeBid(
+    public String placeBid(
             @PathVariable String id,
             @RequestParam BigDecimal amount,
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
         
-        try {
-            Optional<Product> productOpt = productService.findById(id);
-            Optional<User> bidderOpt = userService.findByUsername(currentUser.getUsername());
-            
-            if (productOpt.isEmpty() || bidderOpt.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Produto ou usuário não encontrado");
-                return "redirect:/item/" + id;
-            }
-            
-            productService.makeBid(productOpt.get(), bidderOpt.get(), amount);
-            redirectAttributes.addFlashAttribute("success", "Lance registrado com sucesso!");
-            
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        
-        return "redirect:/item/" + id;
+        return "redirect:/checkout/lance/" + id + "?bidAmount=" + amount;
     }
     
     // Exibe formulário de edição de produto
@@ -275,24 +280,18 @@ public class ProductController {
                 redirectAttributes.addFlashAttribute("errorMessage", "Usuário não encontrado");
                 return "redirect:/aventureiro/inventario";
             }
-            
-            User user = userOpt.get();
-            
-            System.out.println("Tentativa de excluir produto ID: " + id + " pelo usuário: " + currentUser.getUsername());
+              User user = userOpt.get();
             
             Optional<Product> productOpt = productService.findById(id);
             
             if (productOpt.isEmpty()) {
-                System.out.println("Produto não encontrado com ID: " + id);
                 redirectAttributes.addFlashAttribute("errorMessage", "Item não encontrado");
                 return "redirect:/aventureiro/inventario";
             }
             
             Product product = productOpt.get();
-            
-            // Check if current user is the seller
+              // Check if current user is the seller
             if (!product.getSeller().getId().equals(user.getId())) {  // Use user do userService
-                System.out.println("Usuário " + user.getUsername() + " não tem permissão para excluir o item " + product.getId());
                 redirectAttributes.addFlashAttribute("errorMessage", "Você não tem permissão para excluir este item");
                 return "redirect:/item/" + id;
             }
@@ -300,23 +299,16 @@ public class ProductController {
             boolean result = productService.deleteProduct(product, user);  // Passa o user do userService
             
             if (result) {
-                String messageType = "Anúncio removido com sucesso";
-                if (product.getType() == ProductType.AUCTION && product.getStatus() == ProductStatus.AUCTION_ACTIVE) {
+                String messageType = "Anúncio removido com sucesso";                if (product.getType() == ProductType.AUCTION && product.getStatus() == ProductStatus.AUCTION_ACTIVE) {
                     messageType = "Leilão encerrado e removido com sucesso";
                 }
-                // Adicionar log de sucesso no terminal
-                System.out.println("SUCESSO: " + messageType + " para o item " + product.getId() + " - " + product.getName());
                 redirectAttributes.addFlashAttribute("successMessage", messageType);
             } else {
-                System.out.println("FALHA: Não foi possível remover o item " + product.getId());
                 redirectAttributes.addFlashAttribute("errorMessage", "Não foi possível remover o item");
             }
-            
-            return "redirect:/aventureiro/inventario";
+              return "redirect:/aventureiro/inventario";
             
         } catch (Exception e) {
-            System.out.println("ERRO AO EXCLUIR: " + e.getMessage());
-            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao processar a exclusão: " + e.getMessage());
             return "redirect:/aventureiro/inventario";
         }

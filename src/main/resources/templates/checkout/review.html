@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Finalizar Compra - RPG Market</title>
+    <style>        .gold-coins {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        .address-card {
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .address-card:hover {
+            border-color: #8B4513;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .address-card.selected {
+            border-color: #8B4513;
+            background-color: #FFF8DC;
+        }
+        .checkout-summary {
+            background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 100%);
+            border: 2px solid #8B4513;
+        }
+        .medieval-divider {
+            border-top: 3px solid #8B4513;
+            margin: 20px 0;
+            position: relative;
+        }
+        .medieval-divider::before {
+            content: "⚔️";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFF8DC;
+            padding: 0 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Barra lateral com resumo da compra -->
+                <div class="col-lg-4 order-lg-2 mb-4">
+                    <div class="card checkout-summary">
+                        <div class="card-header">
+                            <h4 class="rpg-font mb-0">
+                                <i class="fas fa-scroll me-2"></i>Resumo da Compra
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- Informações do produto -->
+                            <div class="d-flex align-items-center mb-3">
+                                <img th:if="${summary.product.imageUrl}" 
+                                     th:src="@{/images/{name}(name=${summary.product.imageUrl})}" 
+                                     class="rounded" width="60" height="60" alt="Produto">
+                                <img th:unless="${summary.product.imageUrl}" 
+                                     th:src="@{/static/images/default-product.jpg}" 
+                                     class="rounded" width="60" height="60" alt="Produto">
+                                <div class="ms-3">
+                                    <h6 class="mb-0" th:text="${summary.product.name}">Nome do Item</h6>
+                                    <small class="text-muted" th:text="${summary.seller.username}">Vendedor</small>
+                                </div>
+                            </div>
+                            
+                            <div class="medieval-divider"></div>
+                            
+                            <!-- Detalhes do preço -->
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Preço do Item:</span>
+                                <span class="gold-coins" th:text="${#numbers.formatDecimal(summary.totalAmount, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                    100.00 moedas
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2" th:if="${summary.shippingCost.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                                <span>Frete:</span>
+                                <span class="gold-coins" th:text="${#numbers.formatDecimal(summary.shippingCost, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                    5.00 moedas
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2" th:if="${summary.serviceFee.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                                <span>Taxa de Serviço:</span>
+                                <span class="gold-coins" th:text="${#numbers.formatDecimal(summary.serviceFee, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                    2.00 moedas
+                                </span>
+                            </div>
+                            
+                            <hr class="my-3">
+                            
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong>Total:</strong>
+                                <strong class="gold-coins h5" th:text="${#numbers.formatDecimal(summary.grandTotal, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                    107.00 moedas
+                                </strong>
+                            </div>
+                            
+                            <!-- Saldo do comprador -->
+                            <div class="alert" th:classappend="${summary.hasSufficientFunds ? 'alert-success' : 'alert-danger'}">
+                                <div class="d-flex justify-content-between">
+                                    <span>Seu saldo:</span>
+                                    <span class="gold-coins" th:text="${#numbers.formatDecimal(summary.goldBalance, 0, 'POINT', 2, 'COMMA')} + ' moedas'">
+                                        200.00 moedas
+                                    </span>
+                                </div>
+                                <div th:if="${!summary.hasSufficientFunds}" class="mt-2">
+                                    <small><i class="fas fa-exclamation-triangle me-1"></i>Saldo insuficiente para esta compra</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Informações especiais para leilão -->
+                            <div th:if="${checkoutType == 'AUCTION_BUY_NOW'}" class="alert alert-info">
+                                <i class="fas fa-gavel me-2"></i>
+                                <strong>Compra Imediata</strong><br>
+                                <small>Ao confirmar, você encerra o leilão e adquire o item pelo preço "Compre Agora".</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulário principal -->
+                <div class="col-lg-8 order-lg-1">
+                    <h1 class="rpg-font mb-4">
+                        <i class="fas fa-shopping-cart me-2"></i>Finalizar Compra
+                    </h1>
+                    
+                    <form th:action="@{/checkout/confirmar}" method="post" th:object="${request}" id="checkoutForm">
+                        <input type="hidden" th:field="*{productId}">
+                        
+                        <!-- Seção de Endereço de Entrega -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="rpg-font mb-0">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Endereço de Entrega
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Endereços salvos -->
+                                <div th:if="${!userAddresses.isEmpty()}" class="mb-4">
+                                    <h6>Endereços Salvos:</h6>
+                                    <div class="row">                                        <div class="col-md-6 mb-3" th:each="address : ${userAddresses}">
+                                            <div class="card address-card" th:data-address-id="${address.id}">
+                                                <div class="card-body">                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="deliveryAddressId" 
+                                                               th:value="${address.id}" th:id="|addr_${address.id}|">
+                                                        <label class="form-check-label" th:for="|addr_${address.id}|">                                                            <strong th:text="${address.description ?: 'Endereço'}">Endereço</strong><br>
+                                                            <small th:text="|${address.street}, ${address.number} - ${address.city}|">
+                                                                Rua A, 123 - Cidade
+                                                            </small>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Novo endereço -->
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" 
+                                            data-bs-target="#newAddressForm" aria-expanded="false">
+                                        <i class="fas fa-plus me-2"></i>Adicionar Novo Endereço
+                                    </button>
+                                </div>
+                                
+                                <div class="collapse" id="newAddressForm">
+                                    <div class="card card-body">
+                                        <div class="row">
+                                            <div class="col-md-8 mb-3">
+                                                <label for="street" class="form-label">Rua/Avenida</label>
+                                                <input type="text" class="form-control" id="street" th:field="*{street}">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="number" class="form-label">Número</label>
+                                                <input type="text" class="form-control" id="number" th:field="*{number}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="complement" class="form-label">Complemento</label>
+                                                <input type="text" class="form-control" id="complement" th:field="*{complement}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="district" class="form-label">Bairro</label>
+                                                <input type="text" class="form-control" id="district" th:field="*{district}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="city" class="form-label">Cidade</label>
+                                                <input type="text" class="form-control" id="city" th:field="*{city}">
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="state" class="form-label">Estado</label>
+                                                <input type="text" class="form-control" id="state" th:field="*{state}">
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="postalCode" class="form-label">CEP</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="postalCode" th:field="*{postalCode}" 
+                                                           placeholder="00000-000" maxlength="9">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="searchCEP()" id="searchCepBtn">
+                                                        <i class="fas fa-search" id="searchCepIcon"></i>
+                                                    </button>
+                                                </div>
+                                                <div id="cepError" class="text-danger mt-1" style="display: none;">
+                                                    <small><i class="fas fa-exclamation-triangle"></i> <span id="cepErrorText">CEP não encontrado</span></small>
+                                                </div>
+                                                <div id="cepSuccess" class="text-success mt-1" style="display: none;">
+                                                    <small><i class="fas fa-check"></i> <span id="cepSuccessText">CEP encontrado</span></small>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label for="addressDescription" class="form-label">Descrição do Endereço</label>
+                                                <input type="text" class="form-control" id="addressDescription" 
+                                                       th:field="*{addressDescription}" placeholder="Ex: Casa, Trabalho, Apartamento...">
+                                            </div>
+                                        </div>
+                                          <!-- Geolocalização simples -->
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label mb-0">Preencher endereço automaticamente:</label>
+                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="getCurrentLocationAndFillAddress()" id="locationBtn">
+                                                    <i class="fas fa-location-arrow me-1" id="locationIcon"></i>
+                                                    <span id="locationText">Usar minha localização</span>
+                                                </button>
+                                            </div>
+                                            <div id="locationStatus" class="alert" style="display: none;">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <span id="locationMessage"></span>
+                                            </div>
+                                            <input type="hidden" id="latitude" th:field="*{latitude}">
+                                            <input type="hidden" id="longitude" th:field="*{longitude}">
+                                        </div>
+                                        
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" th:field="*{saveAddress}" id="saveAddress">
+                                            <label class="form-check-label" for="saveAddress">
+                                                Salvar este endereço para próximas compras
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Observações -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="rpg-font mb-0">
+                                    <i class="fas fa-comment me-2"></i>Observações
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <textarea class="form-control" th:field="*{notes}" rows="3" 
+                                          placeholder="Observações sobre a compra (opcional)"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Botões de ação -->
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/item/{id}(id=${summary.product.id})}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <button type="submit" class="btn btn-gold btn-lg" th:disabled="${!summary.hasSufficientFunds}">
+                                <i class="fas fa-check me-2"></i>Confirmar Compra
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>    </div>    <div layout:fragment="pageScripts">        <script>
+            // CEP Formatting function
+            function formatCEP(cep) {
+                cep = cep.replace(/\D/g, '');
+                if (cep.length <= 5) {
+                    return cep;
+                } else {
+                    return cep.substring(0, 5) + '-' + cep.substring(5, 8);
+                }
+            }
+
+            // Multiple CEP APIs with fallback
+            async function searchCEPWithFallback(cep) {
+                const apis = [
+                    {
+                        name: 'ViaCEP',
+                        url: `https://viacep.com.br/ws/${cep}/json/`,
+                        parse: (data) => ({
+                            street: data.logradouro || '',
+                            district: data.bairro || '',
+                            city: data.localidade || '',
+                            state: data.uf || '',
+                            error: data.erro || false
+                        })
+                    },
+                    {
+                        name: 'BrasilAPI',
+                        url: `https://brasilapi.com.br/api/cep/v1/${cep}`,
+                        parse: (data) => ({
+                            street: data.street || '',
+                            district: data.district || '',
+                            city: data.city || '',
+                            state: data.state || '',
+                            error: false
+                        })
+                    },
+                    {
+                        name: 'AWESOMEAPI',
+                        url: `https://cep.awesomeapi.com.br/json/${cep}`,
+                        parse: (data) => ({
+                            street: data.address || '',
+                            district: data.district || '',
+                            city: data.city || '',
+                            state: data.state || '',
+                            error: data.status === 400
+                        })
+                    }
+                ];
+
+                console.log('Buscando CEP:', cep);
+
+                for (const api of apis) {
+                    try {
+                        console.log(`Tentando API: ${api.name}`);
+                        
+                        const response = await fetch(api.url, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            console.warn(`${api.name} retornou status ${response.status}`);
+                            continue;
+                        }
+
+                        const data = await response.json();
+                        const parsed = api.parse(data);
+
+                        if (!parsed.error && (parsed.street || parsed.city)) {
+                            console.log(`✅ Sucesso com ${api.name}:`, parsed);
+                            return { success: true, data: parsed, api: api.name };
+                        }
+
+                        console.warn(`${api.name} retornou dados vazios:`, parsed);
+
+                    } catch (error) {
+                        console.error(`❌ Erro na ${api.name}:`, error);
+                    }
+                }
+
+                return { success: false, error: 'Todas as APIs falharam' };
+            }
+
+            // Main CEP search function
+            async function searchCEP() {
+                const cepInput = document.getElementById('postalCode');
+                const searchBtn = document.getElementById('searchCepBtn');
+                const searchIcon = document.getElementById('searchCepIcon');
+                const errorDiv = document.getElementById('cepError');
+                const successDiv = document.getElementById('cepSuccess');
+                const successText = document.getElementById('cepSuccessText');
+                const errorText = document.getElementById('cepErrorText');
+
+                if (!cepInput) {
+                    console.warn('CEP input not found');
+                    return;
+                }
+
+                let cep = cepInput.value.replace(/\D/g, '');
+
+                // Clear previous messages
+                if (errorDiv) errorDiv.style.display = 'none';
+                if (successDiv) successDiv.style.display = 'none';
+
+                // Validate CEP format
+                if (cep.length !== 8) {
+                    if (cep.length > 0 && errorDiv && errorText) {
+                        errorText.textContent = 'CEP deve ter 8 dígitos';
+                        errorDiv.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Format CEP with hyphen
+                cepInput.value = formatCEP(cep);
+
+                // Show loading state
+                if (searchIcon) searchIcon.className = 'fas fa-spinner fa-spin';
+                if (searchBtn) searchBtn.disabled = true;
+
+                try {
+                    console.log('🔍 Iniciando busca do CEP:', cep);
+                    const result = await searchCEPWithFallback(cep);
+
+                    // Reset button state
+                    if (searchIcon) searchIcon.className = 'fas fa-search';
+                    if (searchBtn) searchBtn.disabled = false;
+
+                    if (result.success) {
+                        const data = result.data;
+                        console.log('✅ CEP encontrado:', data);
+
+                        // Fill address fields
+                        if (data.street) document.getElementById('street').value = data.street;
+                        if (data.district) document.getElementById('district').value = data.district;
+                        if (data.city) document.getElementById('city').value = data.city;
+                        if (data.state) document.getElementById('state').value = data.state;                        // Show success message
+                        if (successDiv && successText) {
+                            successText.textContent = `CEP encontrado via ${result.api} - Endereço preenchido automaticamente`;
+                            successDiv.style.display = 'block';
+                        }
+
+                        // Focus on number field
+                        const numberField = document.getElementById('number');
+                        if (numberField) numberField.focus();
+
+                    } else {
+                        console.error('❌ CEP não encontrado');
+                        if (errorDiv && errorText) {
+                            errorText.textContent = 'CEP não encontrado em nenhuma base de dados disponível';
+                            errorDiv.style.display = 'block';
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('❌ Erro geral ao buscar CEP:', error);
+
+                    // Reset button state
+                    if (searchIcon) searchIcon.className = 'fas fa-search';
+                    if (searchBtn) searchBtn.disabled = false;
+
+                    if (errorDiv && errorText) {
+                        errorText.textContent = 'Erro ao buscar CEP. Verifique sua conexão com a internet.';
+                        errorDiv.style.display = 'block';
+                    }
+                }
+            }
+
+            // Get current location and fill address - Native browser geolocation
+            function getCurrentLocationAndFillAddress() {
+                if (!navigator.geolocation) {
+                    showLocationMessage('Geolocalização não é suportada pelo seu navegador.', 'danger');
+                    return;
+                }
+
+                const button = document.getElementById('locationBtn');
+                const locationIcon = document.getElementById('locationIcon');
+                const locationText = document.getElementById('locationText');
+                
+                // Update button to loading state
+                if (button) button.disabled = true;
+                if (locationIcon) locationIcon.className = 'fas fa-spinner fa-spin me-1';
+                if (locationText) locationText.textContent = 'Obtendo localização...';
+                
+                showLocationMessage('Obtendo sua localização...', 'info');
+
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+                        try {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+
+                            console.log('📍 Localização obtida:', lat, lng);
+                            showLocationMessage('Localização obtida! Buscando endereço...', 'info');
+
+                            // Update hidden fields
+                            const latField = document.getElementById('latitude');
+                            const lngField = document.getElementById('longitude');
+                            
+                            if (latField) latField.value = lat;
+                            if (lngField) lngField.value = lng;
+
+                            // Use reverse geocoding API to get address from coordinates
+                            await reverseGeocodeCoordinates(lat, lng);
+                            
+                        } catch (error) {
+                            console.error('❌ Erro ao processar localização:', error);
+                            showLocationMessage('Erro ao processar localização.', 'danger');
+                        } finally {
+                            // Reset button state
+                            resetLocationButton();
+                        }
+                    },
+                    function(error) {
+                        let errorMessage = 'Erro desconhecido ao obter localização.';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'Permissão de localização negada. Permita o acesso à localização.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'Informação de localização não disponível.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'Timeout ao obter localização. Tente novamente.';
+                                break;
+                        }
+
+                        console.error('❌ Erro de geolocalização:', error);
+                        showLocationMessage(errorMessage, 'danger');
+                        resetLocationButton();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 60000
+                    }
+                );
+            }
+
+            // Reverse geocoding using free APIs to get CEP from coordinates
+            async function reverseGeocodeCoordinates(lat, lng) {
+                console.log('🔄 Iniciando reverse geocoding para:', lat, lng);
+                
+                // Try multiple free reverse geocoding services
+                const reverseApis = [
+                    {
+                        name: 'Nominatim',
+                        url: `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`,
+                        parse: (data) => {
+                            if (!data || !data.address) return null;
+                            const addr = data.address;
+                            return {
+                                street: addr.road || addr.highway || '',
+                                number: addr.house_number || '',
+                                district: addr.suburb || addr.neighbourhood || addr.district || '',
+                                city: addr.city || addr.town || addr.village || addr.municipality || '',
+                                state: addr.state || '',
+                                postalCode: addr.postcode || ''
+                            };
+                        }
+                    },
+                    {
+                        name: 'BigDataCloud',
+                        url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=pt`,
+                        parse: (data) => {
+                            if (!data) return null;
+                            return {
+                                street: data.locality || '',
+                                district: data.localityInfo?.administrative?.[3]?.name || '',
+                                city: data.city || '',
+                                state: data.principalSubdivision || '',
+                                postalCode: data.postcode || ''
+                            };
+                        }
+                    }
+                ];
+
+                for (const api of reverseApis) {
+                    try {
+                        console.log(`🔍 Tentando ${api.name}...`);
+                        
+                        const response = await fetch(api.url, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            console.warn(`${api.name} retornou status ${response.status}`);
+                            continue;
+                        }
+
+                        const data = await response.json();
+                        const parsed = api.parse(data);
+
+                        if (parsed && (parsed.city || parsed.postalCode)) {
+                            console.log(`✅ Sucesso com ${api.name}:`, parsed);
+                            
+                            // If we got a postal code, use it to fill detailed address via CEP APIs
+                            if (parsed.postalCode && parsed.postalCode.length >= 8) {
+                                const cleanCep = parsed.postalCode.replace(/\D/g, '');
+                                if (cleanCep.length === 8) {
+                                    console.log('🎯 CEP encontrado via geocoding:', cleanCep);
+                                    document.getElementById('postalCode').value = formatCEP(cleanCep);
+                                    
+                                    // Use our existing CEP search to fill detailed address
+                                    const cepResult = await searchCEPWithFallback(cleanCep);
+                                    if (cepResult.success) {
+                                        fillAddressFromCepData(cepResult.data);
+                                        showLocationMessage(`✅ Endereço preenchido automaticamente via CEP ${formatCEP(cleanCep)}!`, 'success');
+                                        return;
+                                    }
+                                }
+                            }
+                            
+                            // Fallback: fill with reverse geocoding data
+                            fillAddressFromReverseGeocode(parsed);
+                            showLocationMessage('✅ Localização convertida para endereço! Verifique os dados.', 'success');
+                            return;
+                        }
+
+                    } catch (error) {
+                        console.warn(`❌ Erro na ${api.name}:`, error);
+                    }
+                }
+
+                // If all APIs failed
+                console.warn('⚠️ Todas as APIs de reverse geocoding falharam');
+                showLocationMessage('⚠️ Não foi possível converter localização para endereço. Coordenadas salvas.', 'warning');
+            }
+
+            // Fill address fields from CEP data
+            function fillAddressFromCepData(data) {
+                if (data.street) document.getElementById('street').value = data.street;
+                if (data.district) document.getElementById('district').value = data.district;
+                if (data.city) document.getElementById('city').value = data.city;
+                if (data.state) document.getElementById('state').value = data.state;
+                
+                // Focus on number field since it's usually missing
+                const numberField = document.getElementById('number');
+                if (numberField) {
+                    numberField.focus();
+                    numberField.placeholder = 'Digite o número da sua casa/prédio';
+                }
+            }
+
+            // Fill address fields from reverse geocoding data
+            function fillAddressFromReverseGeocode(data) {
+                const streetField = document.getElementById('street');
+                const numberField = document.getElementById('number');
+                const districtField = document.getElementById('district');
+                const cityField = document.getElementById('city');
+                const stateField = document.getElementById('state');
+                const postalCodeField = document.getElementById('postalCode');
+
+                // Only fill empty fields
+                if (data.street && streetField && !streetField.value) {
+                    streetField.value = data.street;
+                }
+                if (data.number && numberField && !numberField.value) {
+                    numberField.value = data.number;
+                }
+                if (data.district && districtField && !districtField.value) {
+                    districtField.value = data.district;
+                }
+                if (data.city && cityField && !cityField.value) {
+                    cityField.value = data.city;
+                }
+                if (data.state && stateField && !stateField.value) {
+                    stateField.value = data.state;
+                }
+                if (data.postalCode && postalCodeField && !postalCodeField.value) {
+                    postalCodeField.value = formatCEP(data.postalCode);
+                }
+
+                // Focus on the first empty important field
+                if (!numberField.value) {
+                    numberField.focus();
+                } else if (!streetField.value) {
+                    streetField.focus();
+                }
+            }
+
+            // Helper functions for location status
+            function showLocationMessage(message, type) {
+                const statusDiv = document.getElementById('locationStatus');
+                const messageSpan = document.getElementById('locationMessage');
+                
+                if (statusDiv && messageSpan) {
+                    statusDiv.className = `alert alert-${type}`;
+                    statusDiv.style.display = 'block';
+                    messageSpan.textContent = message;
+                }
+                
+                console.log(`📍 ${message}`);
+            }
+
+            function resetLocationButton() {
+                const button = document.getElementById('locationBtn');
+                const locationIcon = document.getElementById('locationIcon');
+                const locationText = document.getElementById('locationText');
+                
+                if (button) button.disabled = false;
+                if (locationIcon) locationIcon.className = 'fas fa-location-arrow me-1';
+                if (locationText) locationText.textContent = 'Usar minha localização';
+            }// Fill address from geocoding result
+            function fillAddressFromGeocoding(result) {
+                try {
+                    if (!result || !result.address_components) {
+                        console.warn('⚠️ Resultado de geocoding inválido');
+                        return;
+                    }
+
+                    const components = result.address_components;
+                    let street = '', number = '', district = '', city = '', state = '', postalCode = '';
+
+                    console.log('🔍 Processando componentes do endereço:', components);
+
+                    components.forEach(component => {
+                        const types = component.types;
+                        
+                        if (types.includes('street_number')) {
+                            number = component.long_name;
+                        } else if (types.includes('route')) {
+                            street = component.long_name;
+                        } else if (types.includes('sublocality_level_1') || types.includes('sublocality') || types.includes('neighborhood')) {
+                            district = component.long_name;
+                        } else if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+                            city = component.long_name;
+                        } else if (types.includes('administrative_area_level_1')) {
+                            state = component.short_name;
+                        } else if (types.includes('postal_code')) {
+                            postalCode = component.long_name;
+                        }
+                    });
+
+                    console.log('📝 Endereço processado:', { street, number, district, city, state, postalCode });
+
+                    // Only fill empty fields with null checks
+                    const streetField = document.getElementById('street');
+                    const numberField = document.getElementById('number');
+                    const districtField = document.getElementById('district');
+                    const cityField = document.getElementById('city');
+                    const stateField = document.getElementById('state');
+                    const postalCodeField = document.getElementById('postalCode');
+
+                    if (street && streetField && !streetField.value) {
+                        streetField.value = street;
+                    }
+                    if (number && numberField && !numberField.value) {
+                        numberField.value = number;
+                    }
+                    if (district && districtField && !districtField.value) {
+                        districtField.value = district;
+                    }
+                    if (city && cityField && !cityField.value) {
+                        cityField.value = city;
+                    }
+                    if (state && stateField && !stateField.value) {
+                        stateField.value = state;
+                    }
+                    if (postalCode && postalCodeField && !postalCodeField.value) {
+                        postalCodeField.value = formatCEP(postalCode);
+                    }
+
+                    console.log('✅ Campos de endereço atualizados com sucesso');
+
+                } catch (error) {
+                    console.error('❌ Erro ao processar resultado do geocoding:', error);
+                }
+            }
+
+            // Show/hide map error
+            function showMapError(message) {
+                const mapError = document.getElementById('mapError');
+                const mapErrorMessage = document.getElementById('mapErrorMessage');
+                if (mapError && mapErrorMessage) {
+                    mapErrorMessage.textContent = message;
+                    mapError.style.display = 'block';
+                }
+            }
+
+            function hideMapError() {
+                const mapError = document.getElementById('mapError');
+                if (mapError) {
+                    mapError.style.display = 'none';
+                }
+            }
+
+            // Select address function
+            function selectAddress(addressId) {
+                const addressRadio = document.getElementById('addr_' + addressId);
+                if (addressRadio) {
+                    addressRadio.checked = true;
+                    // Hide new address form                const newAddressForm = document.getElementById('newAddressForm');
+                    if (newAddressForm && newAddressForm.classList.contains('show')) {
+                        newAddressForm.classList.remove('show');
+                    }
+                }
+            }            // DOM Ready initialization
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🚀 Inicializando checkout page...');
+
+                // Event listeners para seleção de endereços salvos
+                const addressCards = document.querySelectorAll('.address-card[data-address-id]');
+                addressCards.forEach(card => {
+                    card.addEventListener('click', function() {
+                        const addressId = this.getAttribute('data-address-id');
+                        if (addressId) {
+                            selectAddress(addressId);
+                        }
+                    });
+                    
+                    // Adicionar estilo de cursor pointer para indicar clicabilidade
+                    card.style.cursor = 'pointer';
+                });
+
+                // CEP input formatting
+                const cepInput = document.getElementById('postalCode');
+                if (cepInput) {
+                    cepInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 8) {
+                            e.target.value = formatCEP(value);
+                        }
+                    });
+
+                    cepInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchCEP();
+                        }
+                    });
+                }
+
+                // Address field listeners for geocoding                const streetField = document.getElementById('street');
+                const cityField = document.getElementById('city');
+
+                // Form validation
+                const checkoutForm = document.getElementById('checkoutForm');
+                if (checkoutForm) {
+                    checkoutForm.addEventListener('submit', function(e) {
+                        const hasSelectedAddress = document.querySelector('input[name="deliveryAddressId"]:checked');
+                        const hasNewAddress = document.getElementById('street').value && 
+                                            document.getElementById('city').value;
+
+                        if (!hasSelectedAddress && !hasNewAddress) {
+                            e.preventDefault();
+                            alert('Por favor, selecione um endereço de entrega.');
+                            return false;
+                        }
+
+                        return true;
+                    });
+                }                console.log('✅ Checkout page inicializada');
+            });
+        </script>
+    </div>
+</body>
+</html>
