@@ -27,9 +27,8 @@
                     <i class="fas fa-filter me-2"></i>Filtros e Ordenação
                 </h3>
             </div>
-            <div class="card-body">
-                <form th:action="@{/mercado/masmorra-dos-leiloes}" method="get" class="row g-3">
-                    <!-- Filtro por categoria -->
+            <div class="card-body">                <form th:action="@{/mercado/masmorra-dos-leiloes}" method="get" class="row g-3">
+                    
                     <div class="col-md-3 col-sm-6">
                         <label for="category" class="form-label">Categoria</label>
                         <select class="form-select" id="category" name="category">
@@ -117,72 +116,12 @@
                 <a th:href="@{/mercado/masmorra-dos-leiloes}" class="btn btn-gold mt-2">
                     <i class="fas fa-search me-2"></i>Ver Todos os Leilões
                 </a>
-            </div>
-            
-            <!-- Lista de leilões -->
-            <div th:unless="${auctions.empty}" th:each="auction : ${auctions}" class="col-md-6 col-lg-4">
-                <div class="card h-100 product-card auction-item">
-                    <div class="product-img-container">
-                        <img th:if="${auction.imageUrl}" th:src="@{/images/{name}(name=${auction.imageUrl})}" class="product-img" alt="Imagem do Produto">
-                        <img th:unless="${auction.imageUrl}" th:src="@{/images/default-product.jpg}" class="product-img" alt="Imagem Padrão">
-                        <span class="badge product-category-badge bg-dark" th:text="${auction.category != null ? auction.category.displayName : 'Sem categoria'}">Categoria</span>
-                        <span class="badge bg-danger position-absolute start-0 top-0 m-2">
-                            <i class="fas fa-gavel me-1"></i>Leilão
-                        </span>
-                        
-                        <!-- Raridade badge -->
-                        <span th:if="${auction.rarity}" 
-                              th:class="'badge position-absolute top-0 end-0 m-2 ' + ${auction.rarity.badgeClass}"
-                              th:text="${auction.rarity.displayName}">
-                            Raridade
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title rpg-font" th:text="${auction.name}">Nome do Produto</h5>
-                        <p class="card-text text-truncate" th:text="${auction.description}">Descrição do produto...</p>
-                        
-                        <div class="auction-timer p-2 mb-3 rounded">
-                            <i class="fas fa-hourglass-half me-1"></i>
-                            <span class="countdown" th:data-end-date="${#temporals.format(auction.auctionEndDate, 'yyyy-MM-dd''T''HH:mm:ss')}">
-                                Calculando...
-                            </span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="product-price fs-5" th:text="${'$' + #numbers.formatDecimal(auction.price != null ? auction.price : 0, 0, 'POINT', 2, 'COMMA')}">$0.00</span>
-                                <small class="text-muted d-block">Lance Atual</small>
-                            </div>
-                            <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-gold">
-                                <i class="fas fa-gavel me-1"></i>Dar Lance
-                            </a>
-                        </div>
-                        
-                        <!-- Compra Imediata se disponível -->
-                        <div th:if="${auction.buyNowPrice != null}" class="mt-2">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="text-success fw-bold" th:text="${'$' + #numbers.formatDecimal(auction.buyNowPrice, 0, 'POINT', 2, 'COMMA')}">$0.00</span>
-                                    <small class="text-muted d-block">Compra Imediata</small>
-                                </div>
-                                <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-outline-success">
-                                    <i class="fas fa-shopping-cart me-1"></i>Comprar
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="fas fa-user me-1"></i>
-                            <span th:text="${auction.seller.username}">Vendedor</span>
-                        </small>
-                        <small class="text-muted" th:text="${#temporals.format(auction.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
-                    </div>
-                </div>
-            </div>
+            </div>            
+            <th:block th:unless="${auctions.empty}" th:each="auction : ${auctions}">
+                <div th:replace="~{fragments/product-cards :: auction-card-no-badge(${auction})}"></div>
+            </th:block>
         </div>
         
-        <!-- Paginação -->
         <div th:if="${auctions.totalPages > 1}" class="d-flex justify-content-center mt-4">
             <nav>
                 <ul class="pagination">
@@ -204,15 +143,52 @@
             </nav>
         </div>
     </div>
-    
-    <th:block layout:fragment="pageScripts">
+      <th:block layout:fragment="pageScripts">
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Garantir que os countdowns sejam atualizados imediatamente e a cada segundo
                 updateAllCountdowns();
                 setInterval(updateAllCountdowns, 1000);
             });
-        </script>
+            
+            // ===== SISTEMA DE MODAL DE IMAGENS =====
+            function openImageModal(imgElement) {
+                // Não abrir modal para imagem padrão
+                if (imgElement.src.includes('default-product.jpg')) {
+                    return;
+                }
+                
+                const modal = document.getElementById('imageModal');
+                const modalImg = document.getElementById('modalImage');
+                
+                modal.style.display = 'block';
+                modalImg.src = imgElement.getAttribute('data-full-image') || imgElement.src;
+                
+                // Fechar modal ao clicar fora da imagem
+                modal.onclick = function(event) {
+                    if (event.target === modal) {
+                        closeImageModal();
+                    }
+                }
+            }
+            
+            function closeImageModal() {
+                document.getElementById('imageModal').style.display = 'none';
+            }
+            
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeImageModal();
+                }
+            });        </script>
+        
+        <div id="imageModal" class="image-modal">
+            <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+            <div class="image-modal-content">
+                <img id="modalImage" src="" alt="Imagem do Produto">
+            </div>
+        </div>
     </th:block>
 </body>
 </html>

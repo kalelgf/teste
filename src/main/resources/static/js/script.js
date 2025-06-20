@@ -15,10 +15,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Popover(popoverTriggerEl);
     });
     
-    // Funções específicas para determinadas páginas
+    // Inicializar dropdowns do usuário
+    initUserDropdowns();
+      // Funções específicas para determinadas páginas
     if (document.getElementById('countdown')) {
         updateAuctionCountdown();
     }
+    
+    // Inicializar dropdowns do usuário
+    initUserDropdowns();
       // Initialize all countdowns in inventory
     const inventoryCountdowns = document.querySelectorAll('.countdown');
     
@@ -98,10 +103,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Mostrar campos de leilão
                     auctionFields.style.display = 'block';
                     setTimeout(() => {
-                        auctionFields.classList.add('show');
-                        // Definir o campo de lance inicial como obrigatório
+                        auctionFields.classList.add('show');                        // Definir o campo de lance inicial como obrigatório
                         document.getElementById('startingBid').required = true;
                         document.getElementById('directSalePrice').required = false;
+                        
+                        // Atualizar a prévia quando mudar para leilão
+                        if (typeof updatePreviewFromFields === 'function') {
+                            updatePreviewFromFields();
+                        }
                     }, 10);
                 }, 300);
             } else {
@@ -116,23 +125,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Definir o campo de preço como obrigatório
                         document.getElementById('startingBid').required = false;
                         document.getElementById('directSalePrice').required = true;
+                        
+                        // Atualizar a prévia quando mudar para venda direta
+                        if (typeof updatePreviewFromFields === 'function') {
+                            updatePreviewFromFields();
+                        }
                     }, 10);
                 }, 300);
             }
         });
-    }
-
-    // Add event listeners for form fields if they exist
-    const nameInput = document.getElementById('name');
-    const descInput = document.getElementById('description');
-    const priceInput = document.getElementById('price');
-    const categorySelect = document.getElementById('category');
-    const imageInput = document.getElementById('image');
-
-    if (nameInput) nameInput.addEventListener('input', updatePreview);
-    if (descInput) descInput.addEventListener('input', updatePreview);
-    if (priceInput) priceInput.addEventListener('input', updatePreview);
-    if (categorySelect) categorySelect.addEventListener('change', updatePreview);
+    }    // Add event listeners for form fields if they exist - REMOVIDO para evitar conflito com o updatePreviewFromFields
 
     if (imageInput) {
         imageInput.addEventListener('change', function() {
@@ -178,7 +180,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 userDropdown.setAttribute('aria-expanded', 'false');
             }
         });
-    }
+    }    // Executar as novas funções quando o DOM estiver pronto
+    setupImageFallback();
+    setupMobileScrolling();
+    optimizeMobilePerformance();
+    initUserDropdowns();
 });
 
 /**
@@ -293,49 +299,289 @@ function clearValidationError(inputElement) {
 /**
  * Live preview update
  */
+// Função de preview simplificada - apenas para compatibilidade
 function updatePreview() {
-    // Name
+    // Esta função foi substituída pela updatePreviewFromFields no template create.html
+    // Mantida apenas para compatibilidade com código existente
+    
+    // Se existir a função mais avançada, usar ela
+    if (typeof updatePreviewFromFields === 'function') {
+        updatePreviewFromFields();
+        return;
+    }
+    
+    // Fallback básico apenas
     const previewName = document.getElementById('previewName');
     const nameInput = document.getElementById('name');
     if (previewName && nameInput) {
         previewName.textContent = nameInput.value || 'Nome do Item';
     }
+}
+
+// Função para melhorar fallback de imagens
+function setupImageFallback() {
+    // Setup fallback para avatares de usuário
+    const userAvatars = document.querySelectorAll('.user-avatar');
+    userAvatars.forEach(avatar => {
+        avatar.addEventListener('error', function() {
+            this.style.backgroundImage = "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTUiIGN5PSIxNSIgcj0iMTUiIGZpbGw9IiNkNGFmMzciLz4KPHBhdGggZD0iTTE1IDhDMTIuNzkgOCAxMSA9Ljc5IDExIDEyQzExIDE0LjIxIDEyLjc5IDE2IDE1IDE2QzE3LjIxIDE2IDE5IDE0LjIxIDE5IDEyQzE5IDkuNzkgMTcuMjEgOCAxNSA4WiIgZmlsbD0iIzJjMmMyYyIvPgo8cGF0aCBkPSJNMTUgMThDMTEuNjkgMTggOSAyMC42OSA5IDI0VjI2SDE1SDIxVjI0QzIxIDIwLjY5IDE4LjMxIDE4IDE1IDE4WiIgZmlsbD0iIzJjMmMyYyIvPgo8L3N2Zz4K')";
+            this.style.backgroundSize = 'cover';
+            this.style.backgroundPosition = 'center';
+            this.src = '';
+        });
+    });
     
-    // Description
-    const previewDesc = document.getElementById('previewDescription');
-    const descInput = document.getElementById('description');
-    if (previewDesc && descInput) {
-        previewDesc.textContent = descInput.value || 'Descrição do item...';
-    }
+    // Setup fallback para imagens de produtos
+    const productImages = document.querySelectorAll('.product-img');
+    productImages.forEach(img => {
+        img.addEventListener('error', function() {
+            this.style.backgroundImage = "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjhmOWZhIi8+CjxwYXRoIGQ9Ik0xMDAgNjBDODYuNzQ3IDYwIDc2IDcwLjc0NyA3NiA4NEg3NkM3NiA4NC44IDc2LjggODQuOCA3Ni44IDg0SDc2VjEwNkg3NkM3NiAxMTQuNCA4NC42IDEyNCAxMDAgMTI0QzExNS40IDEyNCAxMjQgMTE0LjQgMTI0IDEwNlYxMDZIMTI0VjEwNkgxMjRWODRDMTI0IDcwLjc0NyAxMTMuMjUzIDYwIDEwMCA2MFoiIGZpbGw9IiNkNGFmMzciLz4KPHBhdGggZD0iTTEwMCAxNDBIMTAwQzEwMy4zMTQgMTQwIDEwNiAxNDIuNjg2IDEwNiAxNDZIMTA2VjE0Nkg5NFYxNDZDOTQgMTQyLjY4NiA5Ni42ODYgMTQwIDEwMCAxNDBaIiBmaWxsPSIjZDRhZjM3Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM2NjY2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkl0ZW0gTcOhZ2ljbzwvdGV4dD4KPC9zdmc+')";
+            this.style.backgroundSize = 'cover';
+            this.style.backgroundPosition = 'center';
+            this.src = '';
+        });
+    });
+}
+
+// Função para smooth scroll em dispositivos móveis
+function setupMobileScrolling() {
+    // Adiciona scroll suave para navegação
+    const navLinks = document.querySelectorAll('.nav-link:not(.dropdown-toggle)');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            // Fechar menu mobile se estiver aberto após clique em link
+            const navbarCollapse = document.getElementById('navbarMain');
+            if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+                const collapseInstance = bootstrap.Collapse.getInstance(navbarCollapse);
+                if (collapseInstance) {
+                    collapseInstance.hide();
+                }
+            }
+        });
+    });
+}
+
+// Função para reinicializar dropdowns quando a tela redimensiona
+function handleWindowResize() {
+    // Fechar todos os dropdowns quando redimensionar
+    const openDropdowns = document.querySelectorAll('.dropdown-menu.show');
+    openDropdowns.forEach(dropdown => {
+        dropdown.classList.remove('show');
+    });
     
-    // Price
-    const previewPrice = document.getElementById('previewPrice');
-    const priceInput = document.getElementById('price');
-    if (previewPrice && priceInput) {
-        const price = priceInput.value || 0;
-        previewPrice.textContent = '$' + parseFloat(price).toFixed(2);
-    }
-    
-    // Category
-    const previewCategory = document.getElementById('previewCategory');
-    const categorySelect = document.getElementById('category');
-    if (previewCategory && categorySelect && categorySelect.selectedIndex > 0) {
-        previewCategory.textContent = categorySelect.options[categorySelect.selectedIndex].text;
-    }
-    
-    // Rarity (if exists)
-    const raritySelect = document.getElementById('rarity');
-    const previewCard = document.querySelector('.preview-card');
-    
-    if (raritySelect && previewCard && raritySelect.selectedIndex > 0) {
-        const rarityValue = raritySelect.value.toLowerCase();
+    // Reinicializar dropdowns do usuário
+    initUserDropdowns();
+}
+
+// Função para otimizar performance em mobile
+function optimizeMobilePerformance() {
+    // Lazy loading para imagens se disponível
+    if ('IntersectionObserver' in window) {
+        const images = document.querySelectorAll('img[data-src]');
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
         
-        // Remove previous rarity classes
-        previewCard.classList.remove('border-common', 'border-uncommon', 'border-rare', 'border-epic', 'border-legendary');
-        
-        // Add appropriate class based on selection
-        if (rarityValue) {
-            previewCard.classList.add('border-' + rarityValue);
+        images.forEach(img => imageObserver.observe(img));
+    }
+    
+    // Otimizar animações em devices com movimento reduzido
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const style = document.createElement('style');
+        style.textContent = `
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// Função para corrigir dropdown em mobile
+function fixMobileDropdown() {
+    // Garantir que os dropdowns do Bootstrap funcionem corretamente
+    const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+    
+    dropdowns.forEach(dropdown => {
+        // Remover listeners antigos
+        dropdown.removeEventListener('click', handleDropdownToggle);
+        dropdown.addEventListener('click', handleDropdownToggle);
+    });
+    
+    function handleDropdownToggle(e) {
+        // Em mobile, permitir que o Bootstrap gerencie o dropdown normalmente
+        if (window.innerWidth <= 991) {
+            // Não prevenir o comportamento padrão, deixar o Bootstrap funcionar
+            return true;
         }
     }
 }
+
+// Função para melhorar navegação mobile  
+function enhanceMobileNavigation() {
+    const navbarToggler = document.querySelector('.navbar-toggler');
+    const navbarCollapse = document.querySelector('.navbar-collapse');
+    
+    if (navbarToggler && navbarCollapse) {
+        // Quando o menu mobile fechar, garantir que dropdowns também fechem
+        navbarCollapse.addEventListener('hidden.bs.collapse', function() {
+            // Fechar todos os dropdowns abertos
+            const openDropdowns = document.querySelectorAll('.dropdown-menu.show');
+            openDropdowns.forEach(menu => {
+                menu.classList.remove('show');
+            });
+            
+            // Resetar aria-expanded dos toggles
+            const dropdownToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+            dropdownToggles.forEach(toggle => {
+                toggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+    
+    // Melhorar comportamento de clique nos links do dropdown
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Se for um botão de form, não interferir
+            if (this.tagName === 'BUTTON') {
+                return true;
+            }
+            
+            // Para links normais, permitir navegação
+            if (this.href && this.href !== '#') {
+                return true;
+            }
+        });
+    });
+}
+
+// Debug para dropdown mobile
+function debugMobileDropdown() {
+    const userDropdown = document.getElementById('userDropdown');
+    const dropdownMenu = document.querySelector('#userDropdown + .dropdown-menu');
+    
+    if (userDropdown) {
+        // Adicionar listener de debug
+        userDropdown.addEventListener('click', function(e) {
+            // Pode adicionar lógica de debug aqui se necessário
+        });
+    }
+}
+
+// ===== DROPDOWN DO USUÁRIO MOBILE/DESKTOP =====
+function initUserDropdowns() {
+    
+    // Aguardar o Bootstrap estar disponível
+    if (typeof bootstrap === 'undefined') {
+        setTimeout(initUserDropdowns, 100);
+        return;
+    }
+    
+    const userDropdownMobile = document.getElementById('userDropdownMobile');
+    const userDropdownDesktop = document.getElementById('userDropdownDesktop');
+    const navbarToggler = document.querySelector('.navbar-toggler');
+    const navbarCollapse = document.getElementById('navbarMain');
+    
+    // Configurar dropdown mobile
+    if (userDropdownMobile) {
+        
+        let dropdownInstance = bootstrap.Dropdown.getInstance(userDropdownMobile);
+        if (!dropdownInstance) {
+            dropdownInstance = new bootstrap.Dropdown(userDropdownMobile, {
+                autoClose: 'outside',
+                boundary: 'viewport'
+            });
+        }
+        
+        // Event listeners para mobile
+        userDropdownMobile.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        userDropdownMobile.addEventListener('show.bs.dropdown', function() {
+            // Fechar menu principal se estiver aberto
+            if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+                const collapseInstance = bootstrap.Collapse.getInstance(navbarCollapse);
+                if (collapseInstance) {
+                    collapseInstance.hide();
+                }
+            }
+        });
+        
+        userDropdownMobile.addEventListener('shown.bs.dropdown', function() {
+            // Dropdown mobile aberto com sucesso
+        });
+        
+        userDropdownMobile.addEventListener('hide.bs.dropdown', function() {
+            // Dropdown mobile sendo fechado
+        });
+    }    // Configurar dropdown desktop
+    if (userDropdownDesktop) {
+        
+        let dropdownInstance = bootstrap.Dropdown.getInstance(userDropdownDesktop);
+        if (!dropdownInstance) {
+            dropdownInstance = new bootstrap.Dropdown(userDropdownDesktop, {
+                autoClose: true,
+                boundary: 'viewport'
+            });
+        }
+    }
+    
+    // Gerenciar conflito entre menu principal e dropdown do usuário
+    if (navbarToggler && navbarCollapse) {
+        navbarCollapse.addEventListener('show.bs.collapse', function() {
+            // Fechar dropdown do usuário se estiver aberto quando menu principal abrir
+            if (userDropdownMobile) {
+                const dropdownInstance = bootstrap.Dropdown.getInstance(userDropdownMobile);
+                if (dropdownInstance) {
+                    dropdownInstance.hide();
+                }
+            }
+        });
+        
+        navbarCollapse.addEventListener('hide.bs.collapse', function() {
+            // Menu principal fechando
+        });
+    }
+}
+
+// ===== INICIALIZAÇÃO =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Funções básicas
+    setupImageFallback();
+    setupMobileScrolling();
+    optimizeMobilePerformance();
+      // Aguardar o Bootstrap carregar completamente
+    setTimeout(() => {
+        // Inicializar dropdowns do usuário
+        if (typeof bootstrap !== 'undefined') {
+            initUserDropdowns();
+        }
+    }, 100);
+});
+
+// Adicionar listener para redimensionamento da janela
+window.addEventListener('resize', handleWindowResize);
+
+// Reinicializar quando a orientação mudar (mobile)
+window.addEventListener('orientationchange', function() {
+    setTimeout(function() {
+        handleWindowResize();
+        initUserDropdowns();
+    }, 100);
+});
+
+// Reinicializar dropdowns quando redimensionar
+window.addEventListener('resize', function() {
+    setTimeout(initUserDropdowns, 100);
+});

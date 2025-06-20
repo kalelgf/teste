@@ -319,15 +319,11 @@
                             city: data.city || '',
                             state: data.state || '',
                             error: data.status === 400
-                        })
-                    }
+                        })                    }
                 ];
-
-                console.log('Buscando CEP:', cep);
 
                 for (const api of apis) {
                     try {
-                        console.log(`Tentando API: ${api.name}`);
                         
                         const response = await fetch(api.url, {
                             method: 'GET',

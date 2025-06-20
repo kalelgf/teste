@@ -21,24 +21,21 @@ import org.slf4j.LoggerFactory;
 @Service
 public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
-    private final Path fileStorageLocation;
-
-    public FileStorageService(@Value("${rpg.market.file.upload-dir}") String uploadDir) {
+    private final Path fileStorageLocation;    public FileStorageService(@Value("${app.upload.dir}") String uploadDir) {
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
-            log.info("Creating directory at: {}", this.fileStorageLocation.toString());
+            log.info("Criando diretório em: {}", this.fileStorageLocation.toString());
             Files.createDirectories(this.fileStorageLocation);
-            log.info("Upload directory created successfully");
+            log.info("Diretório de upload criado com sucesso");
         } catch (Exception ex) {
-            log.error("Could not create upload directory: {}", ex.getMessage());
+            log.error("Não foi possível criar diretório de upload: {}", ex.getMessage());
             throw new RuntimeException("Não foi possível criar o diretório de upload: " + this.fileStorageLocation, ex);
         }
     }
 
-    public String storeFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            log.warn("Attempted to store empty or null file");
-            return null; // Return null for empty files rather than throwing exception
+    public String storeFile(MultipartFile file) throws IOException {        if (file == null || file.isEmpty()) {
+            log.warn("Tentativa de salvar arquivo vazio ou nulo");
+            return null;
         }
         
         // Generate unique filename

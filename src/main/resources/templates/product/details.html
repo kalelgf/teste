@@ -6,8 +6,151 @@
       layout:decorate="~{layout/main}">
 <head>
     <title th:text="${product.name} + ' - RPG Market'">Detalhes do Item - RPG Market</title>
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); color: #28a745; }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        }
+        
+        .bid-success {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .current-bid-updated {
+            animation: glow 2s ease-in-out;
+        }
+        
+        .bid-form {
+            transition: all 0.3s ease;
+        }
+        
+        .bid-form:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .auction-timer {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
+            border-radius: 10px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .product-price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .bid-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 350px;
+        }
+        
+        /* Estilos para o modal de confirmação - Tema RPG */
+        .text-gold {
+            color: #FFD700 !important;
+        }
+        
+        .border-gold {
+            border-color: #FFD700 !important;
+        }
+        
+        .modal-content {
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .rpg-font {
+            font-family: 'MedievalSharp', serif;
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .modal-header, .modal-footer {
+            background: rgba(255, 215, 0, 0.05);
+        }
+    </style>
 </head>
 <body>    <div layout:fragment="content">
+        <!-- Notification container -->
+        <div id="bidNotifications" class="bid-notification"></div>
+        
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p class="mt-2">Processando seu lance...</p>
+            </div>
+        </div>
+        
         <!-- Alerta para produtos vendidos -->
         <div th:if="${product.status.name() == 'SOLD' or product.status.name() == 'AUCTION_ENDED'}" 
              class="alert alert-warning alert-dismissible fade show border-warning mb-4" role="alert">
@@ -44,17 +187,14 @@
             <!-- Coluna da Imagem e Detalhes -->
             <div class="col-lg-8 mb-4">
                 <div class="card border-gold h-100">
-                    <div class="row g-0">
-                        <div class="col-md-6">
+                    <div class="row g-0">                        <div class="col-md-6">
                             <div class="product-img-container h-100">
-                                <img th:if="${product.imageUrl}" 
-                                     th:src="@{/images/{name}(name=${product.imageUrl})}" 
-                                     class="img-fluid rounded-start h-100 w-100 object-fit-cover" 
-                                     alt="Imagem do Produto">
-                                <img th:unless="${product.imageUrl}" 
-                                     th:src="@{/static/images/default-product.jpg}" 
-                                     class="img-fluid rounded-start h-100 w-100 object-fit-cover" 
-                                     alt="Imagem Padrão">
+                                <img th:src="${product.imageUrl != null ? '/images/' + product.imageUrl : '/images/default-product.jpg'}" 
+                                     class="img-fluid rounded-start h-100 w-100 object-fit-cover product-img" 
+                                     alt="Imagem do Produto"
+                                     th:data-full-image="${product.imageUrl != null ? '/images/' + product.imageUrl : '/images/default-product.jpg'}"
+                                     onclick="openImageModal(this)"
+                                     onerror="this.src='/images/default-product.jpg';">
                                 <span class="badge product-category-badge bg-dark" 
                                       th:text="${product.category != null ? product.category.displayName : 'Sem categoria'}">Categoria</span>
                             </div>
@@ -177,19 +317,56 @@
                                         $199.99
                                     </h3>
                                 </div>
-                            </div>
-                            <!-- Formulário para dar lance -->
-                            <form th:action="@{/item/{id}/lance(id=${product.id})}" method="post" sec:authorize="isAuthenticated()" class="mb-3">
+                            </div>                            <!-- Formulário para dar lance com modal -->
+                            <div class="bid-form">
                                 <div class="input-group mb-3">
-                                    <span class="input-group-text"><i class="fas fa-coins"></i></span>
-                                    <input type="number" name="amount" class="form-control"
+                                    <span class="input-group-text"><i class="fas fa-coins text-warning"></i></span>
+                                    <input type="number" class="form-control" id="bidAmount"
                                            th:min="${(product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1)}" 
                                            step="0.01"
                                            th:value="${(product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1)}" 
                                            required>
                                 </div>
-                                <button type="submit" class="btn btn-gold w-100">Dar Lance</button>
-                            </form>
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Lance mínimo: $<span id="minBidAmount" th:text="${#numbers.formatDecimal((product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1), 0, 'POINT', 2, 'COMMA')}">101.00</span>
+                                    </small>
+                                </div>                                <button type="button" class="btn btn-gold w-100" id="prepareBidBtn" 
+                                        th:data-product-id="${product.id}"
+                                        th:data-authenticated="${#authorization.expression('isAuthenticated()')}">
+                                    <i class="fas fa-gavel me-2"></i>Dar Lance
+                                </button>
+                                
+                                <!-- Mensagem para usuários não logados -->
+                                <div sec:authorize="!isAuthenticated()" class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <a href="/login" class="alert-link">Faça login</a> para participar dos leilões!
+                                </div>
+                                
+                                <!-- Quick bid buttons -->
+                                <div class="mb-3">
+                                    <small class="text-muted mb-2 d-block">Lance rápido:</small>
+                                    <div class="btn-group w-100" role="group">
+                                        <button type="button" class="btn btn-outline-warning btn-sm quick-bid" 
+                                                th:data-amount="${(product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1)}">
+                                            Mínimo
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm quick-bid" 
+                                                th:data-amount="${(product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1) + 5}">
+                                            +$5
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm quick-bid" 
+                                                th:data-amount="${(product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1) + 10}">
+                                            +$10
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm quick-bid" 
+                                                th:data-amount="${(product.price != null ? product.price : 0) + (product.minBidIncrement != null ? product.minBidIncrement : 1) + 25}">
+                                            +$25
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Botão para comprar agora no leilão -->
                             <form th:if="${product.buyNowPrice != null and #authentication.name != product.seller.username}" 
                                   th:action="@{/item/{id}/comprar(id=${product.id})}" method="post" sec:authorize="isAuthenticated()">
@@ -326,8 +503,52 @@
         </div> <!-- Fim row -->
     </div>
     
-    <th:block layout:fragment="pageScripts">
-        <script th:if="${product.type.name() == 'AUCTION' and product.status.name() == 'AUCTION_ACTIVE'}">
+    <!-- Modal de Confirmação de Lance - Tema RPG -->
+    <div class="modal fade" id="bidConfirmationModal" tabindex="-1" aria-labelledby="bidConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-gold" style="background: linear-gradient(135deg, #2c1810 0%, #3d2817 100%); border: 2px solid #FFD700;">
+                <div class="modal-header" style="border-bottom: 1px solid #FFD700; background: rgba(255, 215, 0, 0.1);">
+                    <h5 class="modal-title rpg-font text-gold" id="bidConfirmationModalLabel">
+                        <i class="fas fa-gavel me-2"></i>Confirmar Lance
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-4">
+                        <i class="fas fa-coins text-warning" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    </div>
+                    <h4 class="text-gold mb-3">Deseja confirmar seu lance?</h4>
+                    <div class="alert alert-warning border-gold" style="background: rgba(255, 215, 0, 0.1); border-color: #FFD700;">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <small class="text-muted">Valor do Lance:</small>
+                                <div class="h4 text-success mb-0" id="modalBidAmount">$0.00</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Item:</small>
+                                <div class="fw-bold text-gold" th:text="${product.name}">Item Name</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info border-info" style="background: rgba(0, 123, 255, 0.1);">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Lembre-se: Os lances são irreversíveis! Certifique-se do valor antes de confirmar.</small>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #FFD700; background: rgba(255, 215, 0, 0.05);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-gold" id="confirmBidButton">
+                        <i class="fas fa-gavel me-2"></i>Confirmar Lance
+                    </button>
+                </div>
+            </div>
+        </div>    </div>
+
+    </div> <!-- Fim layout:fragment="content" -->
+
+    <th:block layout:fragment="pageScripts"><script th:if="${product.type.name() == 'AUCTION' and product.status.name() == 'AUCTION_ACTIVE'}">
             document.addEventListener('DOMContentLoaded', function() {
                 // Obtém o elemento que contém a data final do leilão
                 const endDateElement = document.getElementById('endDate');
@@ -367,8 +588,684 @@
                 }
                 
                 updateCountdown();
+                
+                // Auto-refresh bid information every 30 seconds
+                setInterval(function() {
+                    refreshBidInfo();
+                }, 30000);
+                
+                function refreshBidInfo() {
+                    fetch(window.location.href, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Update current bid price
+                        const newPriceElement = doc.querySelector('.product-price');
+                        const currentPriceElement = document.querySelector('.product-price');
+                        if (newPriceElement && currentPriceElement) {
+                            const newPrice = newPriceElement.textContent;
+                            const currentPrice = currentPriceElement.textContent;
+                            
+                            if (newPrice !== currentPrice) {
+                                currentPriceElement.textContent = newPrice;
+                                
+                                // Add visual feedback for updated price
+                                currentPriceElement.style.animation = 'pulse 1s';
+                                setTimeout(() => {
+                                    currentPriceElement.style.animation = '';
+                                }, 1000);
+                            }
+                        }
+                        
+                        // Update bid history
+                        const newBidHistory = doc.querySelector('.bid-history');
+                        const currentBidHistory = document.querySelector('.bid-history');
+                        if (newBidHistory && currentBidHistory) {
+                            currentBidHistory.innerHTML = newBidHistory.innerHTML;
+                        }
+                        
+                        // Update minimum bid amount in form
+                        const newBidForm = doc.querySelector('input[name="amount"]');
+                        const currentBidForm = document.querySelector('input[name="amount"]');
+                        if (newBidForm && currentBidForm) {
+                            currentBidForm.min = newBidForm.min;
+                            currentBidForm.value = newBidForm.value;
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Error refreshing bid info:', error);
+                    });                }
+            });
+        </script>        <!-- Script unificado para controle do sistema de lances -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Inicializando sistema de lances...');
+                
+                // Inicializar elementos e configurar eventos
+                initializeBidding();
+                
+                function initializeBidding() {
+                    // Verificar se estamos em uma página de leilão
+                    const bidForm = document.querySelector('.bid-form');
+                    const bidAmountInput = document.getElementById('bidAmount');
+                    
+                    if (!bidForm || !bidAmountInput) {
+                        console.log('Não é uma página de leilão, pulando inicialização dos lances');
+                        return;
+                    }
+                    
+                    // Garantir que o botão "Dar Lance" existe
+                    ensureBidButtonExists();
+                    
+                    // Configurar todos os event listeners
+                    setupAllEventListeners();
+                    
+                    // Configurar atualizações automáticas se necessário
+                    setupAutoRefresh();
+                    
+                    // Processar mensagens de feedback
+                    processUrlMessages();
+                }
+                
+                function ensureBidButtonExists() {
+                    let prepareBidBtn = document.getElementById('prepareBidBtn');
+                    
+                    // Se o botão não existe, criar dinamicamente
+                    if (!prepareBidBtn) {
+                        console.log('Botão "Dar Lance" não encontrado, criando...');
+                        
+                        const productId = getProductId();
+                        const bidForm = document.querySelector('.bid-form');
+                        
+                        if (productId && bidForm) {
+                            prepareBidBtn = document.createElement('button');
+                            prepareBidBtn.type = 'button';
+                            prepareBidBtn.className = 'btn btn-gold w-100 mb-3';
+                            prepareBidBtn.id = 'prepareBidBtn';
+                            prepareBidBtn.setAttribute('data-product-id', productId);
+                            prepareBidBtn.innerHTML = '<i class="fas fa-gavel me-2"></i>Dar Lance';
+                            
+                            // Inserir após o input-group
+                            const inputGroup = bidForm.querySelector('.input-group');
+                            if (inputGroup) {
+                                inputGroup.parentNode.insertBefore(prepareBidBtn, inputGroup.nextSibling);
+                            }
+                            
+                            console.log('Botão "Dar Lance" criado com sucesso');
+                        }
+                    }
+                    
+                    return prepareBidBtn;
+                }
+                
+                function getProductId() {
+                    // Primeiro, tentar obter do URL
+                    const urlParts = window.location.pathname.split('/');
+                    if (urlParts.length >= 3 && urlParts[1] === 'item') {
+                        return urlParts[2];
+                    }
+                    
+                    // Segundo, procurar em elementos com data-product-id
+                    const elementWithProductId = document.querySelector('[data-product-id]');
+                    if (elementWithProductId) {
+                        return elementWithProductId.getAttribute('data-product-id');
+                    }
+                    
+                    console.warn('Product ID não encontrado');
+                    return null;
+                }
+                
+                function setupAllEventListeners() {
+                    // Configurar botões de lance rápido
+                    setupQuickBidButtons();
+                    
+                    // Configurar botão principal de lance
+                    setupMainBidButton();
+                }
+                
+                function setupQuickBidButtons() {
+                    const quickBidButtons = document.querySelectorAll('.quick-bid');
+                    const bidAmountInput = document.getElementById('bidAmount');
+                    
+                    quickBidButtons.forEach(button => {
+                        button.addEventListener('click', function() {
+                            const amount = this.getAttribute('data-amount');
+                            if (bidAmountInput && amount) {
+                                bidAmountInput.value = amount;
+                                
+                                // Feedback visual
+                                this.classList.add('active');
+                                setTimeout(() => this.classList.remove('active'), 200);
+                            }
+                        });
+                    });
+                    
+                    console.log(`Configurados ${quickBidButtons.length} botões de lance rápido`);
+                }
+                
+                function setupMainBidButton() {
+                    const prepareBidBtn = document.getElementById('prepareBidBtn');
+                    const bidAmountInput = document.getElementById('bidAmount');
+                    
+                    if (!prepareBidBtn || !bidAmountInput) {
+                        console.log('Elementos necessários para lance não encontrados');
+                        return;
+                    }
+                    
+                    // Remover listeners anteriores se existirem
+                    const newBtn = prepareBidBtn.cloneNode(true);
+                    prepareBidBtn.parentNode.replaceChild(newBtn, prepareBidBtn);
+                    
+                    // Adicionar novo listener
+                    newBtn.addEventListener('click', function() {
+                        handleBidSubmission();
+                    });
+                    
+                    console.log('Event listener do botão principal configurado');
+                }
+                  function handleBidSubmission() {
+                    const bidAmountInput = document.getElementById('bidAmount');
+                    const productId = getProductId();
+                    const amount = bidAmountInput ? bidAmountInput.value : null;
+                    
+                    // Verificar se o usuário está autenticado
+                    const prepareBidBtn = document.getElementById('prepareBidBtn');
+                    const isAuthenticated = prepareBidBtn ? prepareBidBtn.getAttribute('data-authenticated') === 'true' : false;
+                    
+                    if (!isAuthenticated) {
+                        showNotification('Você precisa fazer login para dar lances. Redirecionando...', 'warning');
+                        setTimeout(() => {
+                            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+                        }, 2000);
+                        return;
+                    }
+                    
+                    // Validações
+                    if (!productId) {
+                        showNotification('Erro: ID do produto não encontrado', 'danger');
+                        return;
+                    }
+                    
+                    if (!amount || parseFloat(amount) <= 0) {
+                        showNotification('Por favor, insira um valor válido para o lance', 'warning');
+                        bidAmountInput?.focus();
+                        return;
+                    }
+                      // Mostrar modal de confirmação
+                    showBidConfirmationModal(amount, productId);
+                }
+                
+                function submitBid(productId, amount) {
+                    // Criar formulário dinamicamente
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/lance/dar';
+                    form.style.display = 'none';
+                    
+                    // Campo produto
+                    const productIdField = document.createElement('input');
+                    productIdField.type = 'hidden';
+                    productIdField.name = 'productId';
+                    productIdField.value = productId;
+                    form.appendChild(productIdField);
+                    
+                    // Campo valor
+                    const amountField = document.createElement('input');
+                    amountField.type = 'hidden';
+                    amountField.name = 'amount';
+                    amountField.value = amount;
+                    form.appendChild(amountField);
+                    
+                    // CSRF Token
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                    if (csrfToken) {
+                        const csrfField = document.createElement('input');
+                        csrfField.type = 'hidden';
+                        csrfField.name = '_csrf';
+                        csrfField.value = csrfToken;
+                        form.appendChild(csrfField);
+                    }
+                    
+                    // Enviar
+                    document.body.appendChild(form);
+                    
+                    console.log('Enviando lance:', { productId, amount });
+                    form.submit();
+                }
+                
+                function setupAutoRefresh() {
+                    // Auto-refresh a cada 30 segundos se for leilão ativo
+                    const isAuctionActive = document.querySelector('.badge.bg-warning');
+                    if (isAuctionActive) {
+                        setInterval(refreshBidInfo, 30000);
+                    }
+                }
+                
+                function refreshBidInfo() {
+                    fetch(window.location.href, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Atualizar preço atual
+                        const newPrice = doc.querySelector('.product-price');
+                        const currentPrice = document.querySelector('.product-price');
+                        
+                        if (newPrice && currentPrice && newPrice.textContent !== currentPrice.textContent) {
+                            currentPrice.textContent = newPrice.textContent;
+                            currentPrice.style.animation = 'pulse 1s';
+                            setTimeout(() => currentPrice.style.animation = '', 1000);
+                        }
+                        
+                        // Atualizar histórico de lances
+                        const newBidHistory = doc.querySelector('.bid-history');
+                        const currentBidHistory = document.querySelector('.bid-history');
+                        if (newBidHistory && currentBidHistory) {
+                            currentBidHistory.innerHTML = newBidHistory.innerHTML;
+                        }
+                    })
+                    .catch(error => console.log('Erro ao atualizar informações:', error));
+                }
+                
+                // Função para mostrar notificações
+                function showNotification(message, type = 'info') {
+                    // Remove notificações existentes
+                    const existingNotifications = document.querySelectorAll('.notification-alert');
+                    existingNotifications.forEach(n => n.remove());
+                    
+                    const notification = document.createElement('div');
+                    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed notification-alert`;
+                    notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px; max-width: 400px;';
+                    
+                    const icon = type === 'success' ? 'check-circle' : 
+                                type === 'danger' ? 'exclamation-triangle' : 
+                                type === 'warning' ? 'exclamation-circle' : 'info-circle';
+                    
+                    notification.innerHTML = `
+                        <i class="fas fa-${icon} me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    // Auto remove after 5 seconds
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 5000);
+                }
+                
+                // Verificar mensagens de sucesso/erro da URL
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('success')) {
+                    showNotification('🎉 Lance registrado com sucesso!', 'success');
+                    
+                    // Refresh page after a moment
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname;
+                    }, 2000);
+                }
+                
+                if (urlParams.get('error')) {
+                    showNotification('❌ ' + decodeURIComponent(urlParams.get('error')), 'danger');
+                }                // Função para mostrar modal de confirmação (com validação prévia no servidor)
+                function showBidConfirmationModal(amount, productId) {
+                    console.log('showBidConfirmationModal chamada:', { amount, productId });
+                    
+                    // Primeiro, validar no servidor se o lance é permitido
+                    const formData = new FormData();
+                    formData.append('productId', productId);
+                    formData.append('amount', amount);
+                    
+                    // Adicionar token CSRF
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                    if (csrfToken) {
+                        formData.append('_csrf', csrfToken);
+                    }
+                    
+                    // Fazer requisição de preparação do lance
+                    fetch('/bid/prepare', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Resposta da preparação:', data);
+                        
+                        if (!data.success) {
+                            // Erro de validação - mostrar mensagem na tela
+                            console.log('Erro de validação:', data.error);
+                            showNotification('⚠️ ' + data.error, 'warning');
+                            return;
+                        }
+                        
+                        // Validação passou - continuar com modal original
+                        showActualBidModal(amount, productId, data);
+                    })
+                    .catch(error => {
+                        console.error('Erro na validação do lance:', error);
+                        showNotification('❌ Erro ao validar lance. Tente novamente.', 'danger');
+                    });
+                }
+                  // Função original do modal (renomeada)
+                function showActualBidModal(amount, productId, validationData) {
+                    console.log('showActualBidModal chamada:', { amount, productId, validationData });
+                    
+                    // Tentar encontrar o modal existente ou criar um novo
+                    let modalElement = document.getElementById('bidConfirmationModal');
+                    
+                    // Se não existe, criar dinamicamente
+                    if (!modalElement) {
+                        console.log('Modal não encontrado, criando dinamicamente...');
+                        modalElement = createDynamicBidModal();
+                        
+                        if (!modalElement) {
+                            console.error('Falha ao criar modal dinâmico. Using simple confirm.');
+                            if (confirm(`Confirma o lance de $${parseFloat(amount).toFixed(2)}?`)) {
+                                submitBid(productId, amount);
+                            }
+                            return;
+                        }
+                    }
+                    
+                    // Verificar se Bootstrap está disponível
+                    if (typeof bootstrap === 'undefined') {
+                        console.error('Bootstrap não está carregado. Using simple confirm.');
+                        if (confirm(`Confirma o lance de $${parseFloat(amount).toFixed(2)}?`)) {
+                            submitBid(productId, amount);
+                        }
+                        return;
+                    }
+                    
+                    try {
+                        // Atualizar o valor no modal
+                        const modalBidAmount = modalElement.querySelector('#modalBidAmount');
+                        if (modalBidAmount) {
+                            modalBidAmount.textContent = `$${parseFloat(amount).toFixed(2)}`;
+                            console.log('Valor atualizado no modal:', modalBidAmount.textContent);
+                        } else {
+                            console.warn('modalBidAmount element not found');
+                        }
+                        
+                        // Atualizar nome do produto no modal
+                        const modalProductName = modalElement.querySelector('.fw-bold.text-gold');
+                        const productNameElement = document.querySelector('h1.rpg-font');
+                        if (modalProductName && productNameElement) {
+                            modalProductName.textContent = productNameElement.textContent;
+                        }
+                        
+                        // Mostrar informações da validação se disponível
+                        if (validationData && validationData.message) {
+                            const messageElement = modalElement.querySelector('.modal-body p');
+                            if (messageElement) {
+                                messageElement.textContent = validationData.message;
+                            }
+                        }
+                        
+                        // Configurar o botão de confirmação
+                        const confirmButton = modalElement.querySelector('#confirmBidButton');
+                        if (confirmButton) {
+                            // Limpar listeners anteriores
+                            const newButton = confirmButton.cloneNode(true);
+                            confirmButton.parentNode.replaceChild(newButton, confirmButton);
+                            
+                            // Adicionar novo listener
+                            newButton.addEventListener('click', function() {
+                                console.log('Botão confirmar clicado');
+                                
+                                // Fechar modal
+                                try {
+                                    const modal = bootstrap.Modal.getInstance(modalElement);
+                                    if (modal) {
+                                        modal.hide();
+                                    } else {
+                                        // Fallback manual para fechar modal
+                                        modalElement.classList.remove('show');
+                                        modalElement.style.display = 'none';
+                                        modalElement.setAttribute('aria-hidden', 'true');
+                                        document.body.classList.remove('modal-open');
+                                        const backdrop = document.querySelector('.modal-backdrop');
+                                        if (backdrop) backdrop.remove();
+                                    }
+                                } catch (e) {
+                                    console.error('Erro ao fechar modal:', e);
+                                }
+                                
+                                // Enviar lance
+                                console.log('Enviando lance...');
+                                submitBid(productId, amount);
+                            });
+                            
+                            console.log('Event listener configurado no botão confirmar');
+                        } else {
+                            console.error('confirmBidButton element not found');
+                        }
+                        
+                        // Mostrar modal
+                        console.log('Tentando mostrar modal...');
+                        const modal = new bootstrap.Modal(modalElement, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        modal.show();
+                        console.log('Modal mostrado com sucesso');
+                        
+                    } catch (error) {
+                        console.error('Erro completo ao mostrar modal:', error);
+                        console.error('Stack trace:', error.stack);
+                        
+                        // Fallback para confirmação simples
+                        if (confirm(`Confirma o lance de $${parseFloat(amount).toFixed(2)}?`)) {
+                            submitBid(productId, amount);
+                        }
+                    }
+                }
+                
+                // Função para criar modal dinâmico caso o HTML não seja renderizado
+                function createDynamicBidModal() {
+                    console.log('Criando modal dinâmico...');
+                    
+                    try {
+                        // HTML do modal
+                        const modalHTML = `
+                            <div class="modal fade" id="bidConfirmationModal" tabindex="-1" aria-labelledby="bidConfirmationModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-gold" style="background: linear-gradient(135deg, #2c1810 0%, #3d2817 100%); border: 2px solid #FFD700;">
+                                        <div class="modal-header" style="border-bottom: 1px solid #FFD700; background: rgba(255, 215, 0, 0.1);">
+                                            <h5 class="modal-title rpg-font text-gold" id="bidConfirmationModalLabel">
+                                                <i class="fas fa-gavel me-2"></i>Confirmar Lance
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center py-4">
+                                            <div class="mb-4">
+                                                <i class="fas fa-coins text-warning" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                            </div>
+                                            <h4 class="text-gold mb-3">Deseja confirmar seu lance?</h4>
+                                            <div class="alert alert-warning border-gold" style="background: rgba(255, 215, 0, 0.1); border-color: #FFD700;">
+                                                <div class="row align-items-center">
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Valor do Lance:</small>
+                                                        <div class="h4 text-success mb-0" id="modalBidAmount">$0.00</div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Item:</small>
+                                                        <div class="fw-bold text-gold">Item em Leilão</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-info border-info" style="background: rgba(0, 123, 255, 0.1);">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <small>Lembre-se: Os lances são irreversíveis! Certifique-se do valor antes de confirmar.</small>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer" style="border-top: 1px solid #FFD700; background: rgba(255, 215, 0, 0.05);">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="fas fa-times me-2"></i>Cancelar
+                                            </button>
+                                            <button type="button" class="btn btn-gold" id="confirmBidButton">
+                                                <i class="fas fa-gavel me-2"></i>Confirmar Lance
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Criar div temporária para inserir o HTML
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = modalHTML;
+                        
+                        // Extrair o modal element
+                        const modalElement = tempDiv.firstElementChild;
+                        
+                        // Adicionar ao body
+                        document.body.appendChild(modalElement);
+                        
+                        console.log('Modal dinâmico criado e adicionado ao DOM');
+                        return modalElement;
+                        
+                    } catch (error) {
+                        console.error('Erro ao criar modal dinâmico:', error);
+                        return null;
+                    }
+                }
+                
+                // Função para processar mensagens da URL
+                function processUrlMessages() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    
+                    if (urlParams.get('success')) {
+                        showNotification('🎉 Lance registrado com sucesso!', 'success');
+                        
+                        // Refresh page after a moment to show updated bid
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname;
+                        }, 2000);
+                    }
+                    
+                    if (urlParams.get('error')) {
+                        const errorMsg = decodeURIComponent(urlParams.get('error'));
+                        showNotification('❌ ' + errorMsg, 'danger');
+                    }
+                }
             });
         </script>
+          <!-- CSS melhorado para botões de lance -->
+        <style>
+            .btn-gold:disabled {
+                background-color: #6b7280 !important;
+                border-color: #6b7280 !important;
+                color: #ffffff !important;
+                cursor: not-allowed;
+            }
+            
+            .quick-bid.active {
+                background-color: #f59e0b !important;
+                color: #1a1a1a !important;
+                border-color: #f59e0b !important;
+                transform: scale(0.95);
+                transition: all 0.1s ease;
+            }
+            
+            .notification-alert {
+                animation: slideInRight 0.3s ease-out;
+            }
+            
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            /* Estilos específicos para modais dinâmicos */
+            #bidConfirmationModal .text-gold {
+                color: #FFD700 !important;
+            }
+            
+            #bidConfirmationModal .border-gold {
+                border-color: #FFD700 !important;
+            }
+            
+            #bidConfirmationModal .btn-gold {
+                background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+                border: none;
+                color: #000;
+                font-weight: bold;
+                transition: all 0.3s ease;
+            }
+            
+            #bidConfirmationModal .btn-gold:hover {
+                background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+                color: #000;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+            }
+              #bidConfirmationModal .rpg-font {
+                font-family: 'Cinzel', 'Times New Roman', serif;
+                font-weight: 600;
+            }
+        </style>
+        
+        <script>
+            // ===== SISTEMA DE MODAL DE IMAGENS =====
+            function openImageModal(imgElement) {
+                // Não abrir modal para imagem padrão
+                if (imgElement.src.includes('default-product.jpg')) {
+                    return;
+                }
+                
+                const modal = document.getElementById('imageModal');
+                const modalImg = document.getElementById('modalImage');
+                
+                modal.style.display = 'block';
+                modalImg.src = imgElement.getAttribute('data-full-image') || imgElement.src;
+                
+                // Fechar modal ao clicar fora da imagem
+                modal.onclick = function(event) {
+                    if (event.target === modal) {
+                        closeImageModal();
+                    }
+                }
+            }
+            
+            function closeImageModal() {
+                document.getElementById('imageModal').style.display = 'none';
+            }
+            
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeImageModal();
+                }
+            });
+        </script>
+        
+        <!-- Modal de Imagem -->
+        <div id="imageModal" class="image-modal">
+            <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+            <div class="image-modal-content">
+                <img id="modalImage" src="" alt="Imagem do Produto">
+            </div>
+        </div>
     </th:block>
 </body>
 </html>

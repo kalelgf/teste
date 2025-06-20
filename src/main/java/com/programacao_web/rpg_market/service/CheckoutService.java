@@ -6,6 +6,8 @@ import com.programacao_web.rpg_market.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -13,6 +15,8 @@ import java.util.Optional;
 
 @Service
 public class CheckoutService {
+    
+    private static final Logger log = LoggerFactory.getLogger(CheckoutService.class);
     
     @Autowired
     private ProductService productService;
@@ -55,13 +59,12 @@ public class CheckoutService {
         summary.setSeller(product.getSeller());
         summary.setGoldBalance(buyer.getGoldBalance());
         summary.setNotes(request.getNotes());
-        
-        // Determina o tipo de compra e valor
+          // Determina o tipo de compra e valor
         if (product.getType() == ProductType.DIRECT_SALE) {
             summary.setPurchaseType("DIRECT_SALE");
             summary.setTotalAmount(product.getPrice());
         } else if (product.getType() == ProductType.AUCTION) {
-            if (request.getBidAmount() != null) {
+            if (request.getBidAmount() != null && request.getBidAmount().compareTo(BigDecimal.ZERO) > 0) {
                 // Lance em leilão
                 summary.setPurchaseType("AUCTION_BID");
                 summary.setBidAmount(request.getBidAmount());
@@ -78,16 +81,15 @@ public class CheckoutService {
                     throw new IllegalArgumentException("O lance deve ser de pelo menos " + 
                         summary.getMinBidAmount() + " moedas de ouro");
                 }
-            } else if (product.getBuyNowPrice() != null) {
+            } else if (product.getBuyNowPrice() != null && request.getBidAmount() == null) {
                 // Compra imediata em leilão
                 summary.setPurchaseType("AUCTION_BUY_NOW");
                 summary.setTotalAmount(product.getBuyNowPrice());
             } else {
-                throw new IllegalArgumentException("Tipo de compra não especificado para leilão");
+                throw new IllegalArgumentException("Lance inválido ou tipo de compra não especificado para leilão");
             }
         }
-        
-        // Verifica saldo
+          // Verifica saldo
         summary.setHasSufficientFunds(buyer.getGoldBalance().compareTo(summary.getGrandTotal()) >= 0);
         
         // Processa endereço de entrega
@@ -185,11 +187,14 @@ public class CheckoutService {
                 summary.getDeliveryAddress(), summary.getNotes());
             
             // Para vendas diretas e compras imediatas de leilão, marca como completa
-            transaction = transactionService.updateStatus(transaction.getId(), TransactionStatus.COMPLETED);
-            
-        } else if ("AUCTION_BID".equals(summary.getPurchaseType())) {
+            transaction = transactionService.updateStatus(transaction.getId(), TransactionStatus.COMPLETED);        } else if ("AUCTION_BID".equals(summary.getPurchaseType())) {
             // Lance em leilão
+            log.info("Processando lance em leilão: produtoId={}, licitante={}, valor={}", 
+                     productId, buyer.getUsername(), summary.getBidAmount());
+            
             productService.makeBid(product, buyer, summary.getBidAmount());
+            
+            log.info("Lance em leilão processado com sucesso");
             
             // Para lances, não criamos transação imediatamente
             // A transação será criada quando o leilão terminar

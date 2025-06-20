@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="pt-br" 
-      xmlns:th="http://www.thymeleaf.org" 
+<html lang="pt-br"
+      xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
@@ -19,7 +19,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- Filtros e Ordenação -->
         <div class="card border-gold mb-4">
             <div class="card-header bg-dark text-light">
@@ -34,42 +34,42 @@
                         <label for="category" class="form-label">Categoria</label>
                         <select class="form-select" id="category" name="category">
                             <option value="">Todas as Categorias</option>
-                            <option th:each="categoryOption : ${categories}" 
-                                    th:value="${categoryOption}" 
+                            <option th:each="categoryOption : ${categories}"
+                                    th:value="${categoryOption}"
                                     th:text="${categoryOption.displayName}"
                                     th:selected="${param.category != null && param.category[0] == categoryOption.name()}">
                                 Categoria
                             </option>
                         </select>
                     </div>
-                    
+
                     <!-- Filtro por raridade -->
                     <div class="col-md-3 col-sm-6">
                         <label for="rarity" class="form-label">Raridade</label>
                         <select class="form-select" id="rarity" name="rarity">
                             <option value="">Todas as Raridades</option>
-                            <option th:each="rarityOption : ${rarities}" 
-                                    th:value="${rarityOption}" 
+                            <option th:each="rarityOption : ${rarities}"
+                                    th:value="${rarityOption}"
                                     th:text="${rarityOption.displayName}"
                                     th:selected="${param.rarity != null && param.rarity[0] == rarityOption.name()}">
                                 Raridade
                             </option>
                         </select>
                     </div>
-                    
+
                     <!-- Filtro por faixa de preço -->
                     <div class="col-md-3 col-sm-6">
                         <label for="minPrice" class="form-label">Preço Mínimo</label>
-                        <input type="number" class="form-control" id="minPrice" name="minPrice" 
+                        <input type="number" class="form-control" id="minPrice" name="minPrice"
                                th:value="${param.minPrice}" min="0" step="0.01" placeholder="Min">
                     </div>
-                    
+
                     <div class="col-md-3 col-sm-6">
                         <label for="maxPrice" class="form-label">Preço Máximo</label>
-                        <input type="number" class="form-control" id="maxPrice" name="maxPrice" 
+                        <input type="number" class="form-control" id="maxPrice" name="maxPrice"
                                th:value="${param.maxPrice}" min="0" step="0.01" placeholder="Max">
                     </div>
-                    
+
                     <!-- Ordenação -->
                     <div class="col-md-8">
                         <label for="sort" class="form-label">Ordenar por</label>
@@ -80,11 +80,11 @@
                                 <option value="price,asc" th:selected="${param.sort != null && param.sort[0] == 'price,asc'}">Preço: menor primeiro</option>
                                 <option value="price,desc" th:selected="${param.sort != null && param.sort[0] == 'price,desc'}">Preço: maior primeiro</option>
                             </select>
-                            
+
                             <button type="submit" class="btn btn-gold">
                                 <i class="fas fa-search me-2"></i>Aplicar
                             </button>
-                            
+
                             <a th:href="@{/mercado/vendas-diretas}" class="btn btn-outline-secondary">
                                 <i class="fas fa-sync-alt me-2"></i>Limpar
                             </a>
@@ -92,59 +92,26 @@
                     </div>
                 </form>
             </div>
-        </div>
-        
-        <!-- Lista de Produtos -->
+        </div>        <!-- Lista de Produtos -->
         <div class="row g-4">
             <!-- Se não houver produtos -->
-            <div th:if="${products.empty}" class="col-12 inventory-empty">
-                <i class="fas fa-box-open mb-3"></i>
-                <h4>Não há itens disponíveis com estes filtros</h4>
-                <p class="text-muted">Tente outros critérios de busca ou visite mais tarde!</p>
-                <a th:href="@{/mercado/vendas-diretas}" class="btn btn-gold mt-2">
-                    <i class="fas fa-search me-2"></i>Ver Todos os Itens
-                </a>
-            </div>
-            
-            <!-- Lista de produtos -->
-            <div th:unless="${products.empty}" th:each="product : ${products}" class="col-md-6 col-lg-4">
-                <div class="card h-100 product-card">
-                    <div class="product-img-container">
-                        <img th:if="${product.imageUrl}" th:src="@{/images/{name}(name=${product.imageUrl})}" class="product-img" alt="Imagem do Produto">
-                        <img th:unless="${product.imageUrl}" th:src="@{/images/default-product.jpg}" class="product-img" alt="Imagem Padrão">
-                        <span class="badge product-category-badge bg-dark" th:text="${product.category != null ? product.category.displayName : 'Sem categoria'}">Categoria</span>
-                        
-                        <!-- Raridade badge -->
-                        <span th:if="${product.rarity}" 
-                              th:class="'badge position-absolute top-0 end-0 m-2 ' + ${product.rarity.name() == 'COMMON' ? 'bg-secondary' : 
-                                      (product.rarity.name() == 'UNCOMMON' ? 'bg-success' : 
-                                       (product.rarity.name() == 'RARE' ? 'bg-primary' : 
-                                        (product.rarity.name() == 'EPIC' ? 'bg-purple' : 'bg-warning')))}"
-                              th:text="${product.rarity.displayName}">
-                            Raridade
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title rpg-font" th:text="${product.name}">Nome do Produto</h5>
-                        <p class="card-text text-truncate" th:text="${product.description}">Descrição do produto...</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="product-price" th:text="${'$' + #numbers.formatDecimal(product.price, 0, 'POINT', 2, 'COMMA')}">$0.00</span>
-                            <a th:href="@{/item/{id}(id=${product.id})}" class="btn btn-sm btn-gold">
-                                <i class="fas fa-eye me-1"></i>Detalhes
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="fas fa-user me-1"></i>
-                            <span th:text="${product.seller.username}">Vendedor</span>
-                        </small>
-                        <small class="text-muted" th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
-                    </div>
+            <div th:if="${products.empty}" class="col-12 inventory-empty text-center py-5">
+                <div class="empty-inventory-container p-4 border-gold rounded">
+                    <i class="fas fa-box-open mb-3"></i>
+                    <h4>Não há itens disponíveis com estes filtros</h4>
+                    <p class="text-muted">Tente outros critérios de busca ou visite mais tarde!</p>
+                    <a th:href="@{/mercado/vendas-diretas}" class="btn btn-gold mt-2">
+                        <i class="fas fa-search me-2"></i>Ver Todos os Itens
+                    </a>
                 </div>
             </div>
+
+            <!-- Lista de produtos -->
+            <th:block th:unless="${products.empty}" th:each="product : ${products}">
+                <div th:replace="~{fragments/product-cards :: direct-sale-card-no-badge(${product})}"></div>
+            </th:block>
         </div>
-        
+
         <!-- Paginação -->
         <div th:if="${products.totalPages > 1}" class="d-flex justify-content-center mt-4">
             <nav>
@@ -154,7 +121,7 @@
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
-                    <li th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}" 
+                    <li th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
                         th:class="${products.number == i ? 'page-item active' : 'page-item'}">
                         <a class="page-link" th:href="@{/mercado/vendas-diretas(page=${i},category=${param.category},rarity=${param.rarity},minPrice=${param.minPrice},maxPrice=${param.maxPrice},sort=${param.sort})}" th:text="${i + 1}">1</a>
                     </li>

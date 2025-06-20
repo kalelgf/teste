@@ -143,10 +143,8 @@ public class UserService {
                 if (userOpt.isPresent()) {
                     return userOpt.get().getProfileImageUrl();
                 }
-            }
-        } catch (Exception e) {
-            // Log the exception but don't let it break the application
-            log.error("Error getting current user profile image: {}", e.getMessage());
+            }        } catch (Exception e) {
+            log.error("Erro ao obter imagem do perfil do usuário atual: {}", e.getMessage());
         }
         return null;
     }

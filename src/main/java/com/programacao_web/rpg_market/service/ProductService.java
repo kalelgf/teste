@@ -39,7 +39,8 @@ public class ProductService {
     private TransactionService transactionService;
     
     @Autowired
-    private TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;    @Autowired
+    private BidService bidService;
     
     @Autowired
     private FileStorageService fileStorageService;
@@ -109,62 +110,24 @@ public class ProductService {
      */
     public List<Bid> getProductBids(Product product) {
         return bidRepository.findByProductOrderByAmountDesc(product);
-    }
-    
-    /**
-     * Realiza um lance em um leilão
-     */
-    @Transactional
+    }    /**
+     * Realiza um lance em um leilão (delegado para BidService)
+     */    @Transactional
     public void makeBid(Product product, User bidder, BigDecimal amount) {
-        if (product.getType() != ProductType.AUCTION || 
-            product.getStatus() != ProductStatus.AUCTION_ACTIVE) {
-            throw new IllegalArgumentException("Este produto não está em leilão ativo");
-        }
+        log.info("Delegando lance para BidService: produtoId={}, licitante={}, valor={}", 
+                 product.getId(), bidder.getUsername(), amount);
         
-        // Verifica se o usuário é o vendedor
-        if (bidder.getId().equals(product.getSeller().getId())) {
-            throw new IllegalArgumentException("O vendedor não pode dar lances em seu próprio item");
-        }
+        // Delegar para o BidService que tem a lógica correta
+        bidService.placeBid(product, bidder, amount);
         
-        // Verifica se o lance é maior que o lance atual
-        Optional<Bid> highestBid = bidRepository.findHighestBidForProduct(product);
-        if (highestBid.isPresent() && highestBid.get().getAmount().compareTo(amount) >= 0) {
-            throw new IllegalArgumentException("O lance deve ser maior que o lance atual");
-        }
-        
-        // Verifica o incremento mínimo
-        if (highestBid.isPresent() && product.getMinBidIncrement() != null) {
-            BigDecimal minAmount = highestBid.get().getAmount().add(product.getMinBidIncrement());
-            if (amount.compareTo(minAmount) < 0) {
-                throw new IllegalArgumentException("O lance deve ser pelo menos " + 
-                    product.getMinBidIncrement() + " maior que o lance atual");
-            }
-        }
-        
-        // Cria o novo lance
-        Bid bid = new Bid();
-        bid.setProduct(product);
-        bid.setBidder(bidder);
-        bid.setAmount(amount);
-        bidRepository.save(bid);
-        
-        // Atualiza o preço atual do produto
-        product.setPrice(amount);
-        productRepository.save(product);
-        
-        // Atualiza o lance vencedor
-        highestBid.ifPresent(b -> {
-            b.setWinning(false);
-            bidRepository.save(b);
-        });
-        bid.setWinning(true);
-        bidRepository.save(bid);
-        
-        // Verifica se é uma compra imediata (buy now)
+        // Verificar se é uma compra imediata (buy now)
         if (product.getBuyNowPrice() != null && 
             amount.compareTo(product.getBuyNowPrice()) >= 0) {
+            log.info("Preço de compra imediata atingido, finalizando leilão");
             endAuction(product);
         }
+        
+        log.info("makeBid concluído com sucesso");
     }
     
     /**
@@ -195,8 +158,7 @@ public class ProductService {
         // Cria uma transação
         transactionService.createTransaction(product, buyer, product.getSeller(), price);
     }
-    
-    /**
+      /**
      * Verifica periodicamente leilões que terminaram
      */
     @Scheduled(fixedRate = 60000) // Executa a cada minuto
@@ -205,29 +167,24 @@ public class ProductService {
         List<Product> endedAuctions = productRepository.findByStatusAndAuctionEndDateLessThanEqual(
             ProductStatus.AUCTION_ACTIVE, LocalDateTime.now());
             
+        log.info("Verificando leilões terminados. Encontrados: {}", endedAuctions.size());
+            
         for (Product auction : endedAuctions) {
             endAuction(auction);
         }
     }
     
     /**
-     * Finaliza um leilão
+     * Finaliza um leilão - delega para o BidService a lógica de débito
      */
     private void endAuction(Product product) {
-        product.setStatus(ProductStatus.AUCTION_ENDED);
-        productRepository.save(product);
+        log.info("=== FINALIZANDO LEILÃO ===");
+        log.info("Produto: {} ({})", product.getName(), product.getId());
         
-        // Processa o vencedor
-        Optional<Bid> winningBid = bidRepository.findHighestBidForProduct(product);
-        if (winningBid.isPresent()) {
-            // Cria uma transação para o vencedor
-            transactionService.createTransaction(
-                product, 
-                winningBid.get().getBidder(), 
-                product.getSeller(), 
-                winningBid.get().getAmount()
-            );
-        }
+        // Usar o BidService para processar o fim do leilão corretamente
+        bidService.processAuctionEnd(product);
+        
+        log.info("✅ Leilão finalizado para o produto: {}", product.getId());
     }
 
     /**
@@ -367,10 +324,9 @@ public class ProductService {
             if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
                 fileStorageService.deleteFile(product.getImageUrl());
             }
-            
-            return true;
+              return true;
         } catch (Exception e) {
-            log.error("Error deleting product: {}", e.getMessage());
+            log.error("Erro ao excluir produto: {}", e.getMessage());
             return false;
         }
     }
@@ -389,10 +345,9 @@ public class ProductService {
 
     /**
      * Busca produtos de venda direta com filtros
-     */
-    public Page<Product> findDirectSalesWithFilters(
+     */    public Page<Product> findDirectSalesWithFilters(
             ProductCategory category,
-            ProductRarity rarity,
+            ItemRarity rarity,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Pageable pageable) {
@@ -439,10 +394,9 @@ public class ProductService {
 
     /**
      * Busca leilões ativos com filtros
-     */
-    public Page<Product> findAuctionsWithFilters(
+     */    public Page<Product> findAuctionsWithFilters(
             ProductCategory category,
-            ProductRarity rarity,
+            ItemRarity rarity,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Boolean endingSoon,

@@ -5,12 +5,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
 @Document(collection = "transactions")
 public class Transaction {
     
@@ -37,7 +34,8 @@ public class Transaction {
     
     @Field("completed_at")
     private LocalDateTime completedAt;
-      @Field("tracking_code")
+      
+    @Field("tracking_code")
     private String trackingCode;
     
     @DBRef
@@ -45,4 +43,38 @@ public class Transaction {
     
     @Field("notes")
     private String notes; // Observações da compra
+
+    // Getters e Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    
+    public Product getProduct() { return product; }
+    public void setProduct(Product product) { this.product = product; }
+    
+    public User getBuyer() { return buyer; }
+    public void setBuyer(User buyer) { this.buyer = buyer; }
+    
+    public User getSeller() { return seller; }
+    public void setSeller(User seller) { this.seller = seller; }
+    
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    
+    public TransactionStatus getStatus() { return status; }
+    public void setStatus(TransactionStatus status) { this.status = status; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+    
+    public String getTrackingCode() { return trackingCode; }
+    public void setTrackingCode(String trackingCode) { this.trackingCode = trackingCode; }
+    
+    public DeliveryAddress getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(DeliveryAddress deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+    
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 }

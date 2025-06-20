@@ -5,33 +5,16 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Anúncio - RPG Market</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts - Medieval Sharp -->
-    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
-    
-    <!-- CSS files -->
-    <link th:href="@{/css/common.css}" rel="stylesheet">
-    <link th:href="@{/css/style.css}" rel="stylesheet">
-    <link th:href="@{/css/market.css}" rel="stylesheet">
-    <link th:href="@{/css/product.css}" rel="stylesheet">
-    <link th:href="@{/css/user.css}" rel="stylesheet">
-    <link th:href="@{/css/item-creation.css}" rel="stylesheet">
-    
-    <style>
-        #directSaleFields, #auctionFields {
-            display: none;
-            transition: all 0.3s ease;
-        }
-    </style>
+      <th:block layout:fragment="styles">
+        <link th:href="@{/css/item-creation.css}" rel="stylesheet">
+        <style>
+            #directSaleFields, #auctionFields {
+                display: none;
+                transition: all 0.3s ease;
+            }
+        </style>
+    </th:block>
 </head>
 <body class="rpg-theme">
     <div layout:fragment="content">
@@ -116,13 +99,12 @@
                             <div class="card-header bg-dark text-light">
                                 <h3 class="rpg-font mb-0"><i class="fas fa-coins me-2"></i>Preço e Tipo</h3>
                             </div>
-                            <div class="card-body">
-                                <div class="mb-3">
+                            <div class="card-body">                                <div class="mb-3">
                                     <label for="type" class="form-label">Tipo de Venda*</label>
                                     <select class="form-select" id="type" name="type" required>
-                                        <option value="" selected disabled>Selecione o tipo de venda</option>
-                                        <option value="DIRECT_SALE">Venda Direta</option>
-                                        <option value="AUCTION">Leilão</option>
+                                        <option value="" th:selected="${product.type == null}" disabled>Selecione o tipo de venda</option>
+                                        <option value="DIRECT_SALE" th:selected="${product.type != null && product.type.name() == 'DIRECT_SALE'}">Venda Direta</option>
+                                        <option value="AUCTION" th:selected="${product.type != null && product.type.name() == 'AUCTION'}">Leilão</option>
                                     </select>
                                 </div>
                                 
@@ -178,7 +160,7 @@
                         </div>
                     </div>
                     
-                    <!-- Coluna direita - Imagem, durabilidade e propriedades mágicas -->
+                    <!-- Coluna direita - Imagem e Preview -->
                     <div class="col-md-4">
                         <!-- Imagem -->
                         <div class="card border-gold shadow-sm mb-4">
@@ -196,70 +178,39 @@
                             </div>
                         </div>
                         
-                        <!-- Durabilidade -->
+                        <!-- Preview do Card -->
                         <div class="card border-gold shadow-sm mb-4">
                             <div class="card-header bg-dark text-light">
-                                <h3 class="rpg-font mb-0"><i class="fas fa-shield-alt me-2"></i>Durabilidade</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label for="durability" class="form-label">Estado do Item: <span id="durabilityValue">100%</span></label>
-                                    <input type="range" class="form-range" id="durability" name="durability" min="0" max="100" value="100">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Propriedades Mágicas -->
-                        <div class="card border-gold shadow-sm mb-4">
-                            <div class="card-header bg-dark text-light">
-                                <h3 class="rpg-font mb-0"><i class="fas fa-magic me-2"></i>Propriedades Mágicas</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-text mb-3">Selecione até 3 propriedades mágicas para seu item.</div>
-                                
-                                <div class="magic-properties-grid">
-                                    <div class="row g-2">
-                                        <div th:each="property : ${magicProperties}" class="col-6 mb-2">
-                                            <div class="magic-property-card">
-                                                <div class="form-check">
-                                                    <input class="form-check-input magic-property-checkbox" 
-                                                           type="checkbox" 
-                                                           name="magicProperties" 
-                                                           th:id="${'property-' + property}" 
-                                                           th:value="${property}">
-                                                    <label class="form-check-label w-100" th:for="${'property-' + property}">
-                                                        <span class="property-name" th:text="${property.displayName}">Propriedade</span>
-                                                        <span class="property-desc" th:text="${property.description}">Descrição</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Live Preview Card -->
-                <div class="row mt-4">
-                    <div class="col-md-6 mx-auto">
-                        <div class="card preview-card border-gold shadow">
-                            <div class="card-header bg-dark text-light">
-                                <h4 class="rpg-font mb-0"><i class="fas fa-eye me-2"></i>Prévia</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="product-card">
-                                    <div class="product-img-container">
-                                        <img id="previewImage" src="/images/default-item.jpg" class="product-img">
-                                        <span class="badge product-category-badge bg-dark" id="previewCategory">Categoria</span>
+                                <h3 class="rpg-font mb-0"><i class="fas fa-eye me-2"></i>Preview do Anúncio</h3>
+                            </div>                            <div class="card-body">
+                                <div class="product-preview-card card h-100">
+                                    <div class="preview-img-container product-img-container">
+                                        <img id="previewCardImage" 
+                                             src="/images/default-product.jpg" 
+                                             class="preview-img product-img" 
+                                             alt="Preview do Produto">
+                                        
+                                        <span id="previewCategory" class="badge product-category-badge bg-dark">Categoria</span>
+                                        
+                                        <span id="previewType" class="badge bg-primary position-absolute start-0 top-0 m-2">Venda Direta</span>
+                                        
+                                        <span id="previewRarity" class="badge position-absolute end-0 m-2 bg-secondary" style="top: 45px !important; display: none;">Comum</span>
                                     </div>
                                     <div class="card-body">
-                                        <h5 class="card-title rpg-font" id="previewName">Nome do Item</h5>
-                                        <p class="card-text" id="previewDescription">Descrição do item...</p>
+                                        <h5 id="previewName" class="card-title rpg-font">Nome do Item</h5>
+                                        <p id="previewDescription" class="card-text text-truncate">Descrição do item...</p>
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <span class="product-price" id="previewPrice">$0.00</span>
+                                            <span id="previewPrice" class="product-price">0,00 moedas</span>
+                                            <span class="btn btn-sm btn-gold">
+                                                <i class="fas fa-eye me-1"></i>Detalhes
+                                            </span>
                                         </div>
+                                    </div>                                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>
+                                            <span>Seu usuário</span>
+                                        </small>
+                                        <small class="text-muted" id="previewDate">Hoje</small>
                                     </div>
                                 </div>
                             </div>
@@ -267,7 +218,6 @@
                     </div>
                 </div>
                 
-                <!-- Form buttons (ensuring they are visible with proper styling) -->
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                     <a th:href="@{/aventureiro/inventario}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-2"></i>Cancelar
@@ -279,15 +229,10 @@
             </form>
         </main>
     </div>
-    
+
     <th:block layout:fragment="pageScripts">
-        <!-- Bootstrap JS (ensure it loads before your script.js) -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script th:src="@{/js/script.js}"></script>
-        
-        <!-- Add additional script for rarity selection -->
-        <script>            document.addEventListener('DOMContentLoaded', function() {
-                
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
                 // Get DOM elements
                 const typeSelect = document.getElementById('type');
                 const directSaleFields = document.getElementById('directSaleFields');
@@ -298,112 +243,290 @@
                 const previewPrice = document.getElementById('previewPrice');
                 const submitBtn = document.getElementById('submitBtn');
                 
-                // Enable submit button only when type is selected
-                if (typeSelect && submitBtn) {
-                    typeSelect.addEventListener('change', function() {
+                // Função para inicializar o tipo se foi pré-selecionado
+                function initializePreselectedType() {
+                    if (typeSelect && typeSelect.value) {
+                        // Se há um valor pré-selecionado, habilita o botão e mostra os campos apropriados
                         submitBtn.disabled = false;
-                    });
-                }
-                  // Handle form type switching
-                if (typeSelect) {
-                    typeSelect.addEventListener('change', function() {
                         
-                        if (this.value === 'AUCTION') {
-                            // Show auction fields, hide direct sale fields
+                        if (typeSelect.value === 'DIRECT_SALE') {
+                            directSaleFields.style.display = 'block';
+                            auctionFields.style.display = 'none';
+                            directSalePriceField.setAttribute('required', 'required');
+                            startingBidField.removeAttribute('required');
+                        } else if (typeSelect.value === 'AUCTION') {
                             directSaleFields.style.display = 'none';
                             auctionFields.style.display = 'block';
-                            
-                            // Make auction fields required
+                            startingBidField.setAttribute('required', 'required');
+                            directSalePriceField.removeAttribute('required');
+                        }
+                        
+                        updatePreviewFromFields();
+                    }
+                }
+                
+                // Chama a função de inicialização
+                initializePreselectedType();
+                  if (typeSelect && submitBtn) {
+                    typeSelect.addEventListener('change', function() {
+                        submitBtn.disabled = false;
+                        updatePreviewFromFields();
+                    });
+                }
+                  if (typeSelect) {
+                    typeSelect.addEventListener('change', function() {
+                        if (this.value === 'AUCTION') {
+                            directSaleFields.style.display = 'none';
+                            auctionFields.style.display = 'block';
                             startingBidField.setAttribute('required', 'required');
                             directSalePriceField.removeAttribute('required');
                             
-                            // Update preview to show starting bid if available
                             if (startingBidField.value) {
                                 priceField.value = startingBidField.value;
                                 updatePricePreview(startingBidField.value);
                             }
-                            
                         } else if (this.value === 'DIRECT_SALE') {
-                            // Show direct sale fields, hide auction fields
                             directSaleFields.style.display = 'block';
                             auctionFields.style.display = 'none';
-                            
-                            // Make direct sale fields required
                             directSalePriceField.setAttribute('required', 'required');
                             startingBidField.removeAttribute('required');
                             
-                            // Update preview to show direct sale price if available
                             if (directSalePriceField.value) {
                                 priceField.value = directSalePriceField.value;
                                 updatePricePreview(directSalePriceField.value);
                             }
                         }
+                        updatePreviewFromFields(); // Atualizar preview
                     });
                 }
-                
-                // Handle direct sale price changes
-                if (directSalePriceField) {                    directSalePriceField.addEventListener('input', function() {
+                  if (directSalePriceField) {
+                    directSalePriceField.addEventListener('input', function() {
                         priceField.value = this.value;
                         updatePricePreview(this.value);
+                        updatePreviewFromFields();
                     });
                 }
-                
-                // Handle starting bid changes
-                if (startingBidField) {                    startingBidField.addEventListener('input', function() {
-                        // Update the hidden price field immediately
+                  if (startingBidField) {
+                    startingBidField.addEventListener('input', function() {
                         priceField.value = this.value;
                         updatePricePreview(this.value);
+                        updatePreviewFromFields();
                     });
                 }
                 
-                // Update price preview function
+                // Atualiza o preview do preço
                 function updatePricePreview(value) {
                     if (previewPrice) {
                         const price = parseFloat(value) || 0;
-                        previewPrice.textContent = '$' + price.toFixed(2);
+                        const formattedPrice = price.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        previewPrice.textContent = formattedPrice + ' moedas';
                     }
                 }
+                // ===== SISTEMA DE PREVIEW DINÂMICO =====
+
+                function updatePreview() {
+                    // Atualizar imagem
+                    const imageInput = document.getElementById('image');
+                    const previewImage = document.getElementById('previewCardImage');
+                    const imagePreviewContainer = document.getElementById('imagePreview');
+                    
+                    if (imageInput && imageInput.files && imageInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            // Atualizar preview do card
+                            if (previewImage) {
+                                previewImage.src = e.target.result;
+                            }
+                            
+                            // Atualizar preview da área de upload
+                            if (imagePreviewContainer) {
+                                imagePreviewContainer.innerHTML = '<img src="' + e.target.result + '" style="max-width: 100%; max-height: 150px; object-fit: contain;">';
+                            }
+                        };
+                        reader.readAsDataURL(imageInput.files[0]);
+                    } else {
+                        // Resetar para imagem padrão
+                        if (previewImage) {
+                            previewImage.src = '/images/default-product.jpg';
+                        }
+                        if (imagePreviewContainer) {
+                            imagePreviewContainer.innerHTML = '<i class="fas fa-image fa-3x text-muted"></i>';
+                        }
+                    }
+                    
+                    updatePreviewFromFields();
+                }
+
+                function updatePreviewFromFields() {
+                    // Atualizar nome
+                    const nameField = document.getElementById('name');
+                    const previewName = document.getElementById('previewName');
+                    if (nameField && previewName) {
+                        const name = nameField.value || 'Nome do Item';
+                        previewName.textContent = name;
+                    }
+                    
+                    // Atualizar descrição
+                    const descriptionField = document.getElementById('description');
+                    const previewDescription = document.getElementById('previewDescription');
+                    if (descriptionField && previewDescription) {
+                        const description = descriptionField.value || 'Descrição do item...';
+                        const truncatedDesc = description.length > 50 ? description.substring(0, 50) + '...' : description;
+                        previewDescription.textContent = truncatedDesc;
+                    }
+                    
+                    // Atualizar categoria
+                    const categorySelect = document.getElementById('category');
+                    const previewCategory = document.getElementById('previewCategory');
+                    if (categorySelect && previewCategory) {
+                        const categoryText = categorySelect.options[categorySelect.selectedIndex]?.text || 'Categoria';
+                        previewCategory.textContent = categoryText;
+                    }
+                    
+                    // Atualizar raridade
+                    const raritySelect = document.getElementById('rarity');
+                    const rarityBadge = document.getElementById('previewRarity');
+                    if (raritySelect && rarityBadge) {
+                        if (raritySelect.value && raritySelect.selectedIndex > 0) {
+                            const rarityText = raritySelect.options[raritySelect.selectedIndex].text;
+                            const rarityValue = raritySelect.value;
+                            
+                            rarityBadge.textContent = rarityText;
+                            rarityBadge.style.display = 'inline-block';
+                            
+                            // Definir cor do badge baseado na raridade
+                            rarityBadge.className = 'badge position-absolute end-0 m-2 ';
+                            rarityBadge.style.top = '45px';
+                            
+                            switch(rarityValue) {
+                                case 'COMUM':
+                                    rarityBadge.className += 'bg-secondary';
+                                    break;
+                                case 'INCOMUM':
+                                    rarityBadge.className += 'bg-success';
+                                    break;
+                                case 'RARO':
+                                    rarityBadge.className += 'bg-primary';
+                                    break;
+                                case 'MUITO_RARO':
+                                    rarityBadge.className += 'bg-warning';
+                                    break;
+                                case 'LENDARIO':
+                                    rarityBadge.className += 'bg-danger';
+                                    break;
+                                case 'ARTEFATO':
+                                    rarityBadge.className += 'bg-gold';
+                                    break;
+                                default:
+                                    rarityBadge.className += 'bg-secondary';
+                            }
+                        } else {
+                            rarityBadge.style.display = 'none';
+                        }
+                    }
+                    
+                    // Atualizar tipo e ícone
+                    const typeElement = document.getElementById('previewType');
+                    if (typeSelect && typeElement) {
+                        const type = typeSelect.value;
+                        
+                        if (type === 'DIRECT_SALE') {
+                            typeElement.innerHTML = '<i class="fas fa-shopping-cart me-1"></i>Venda Direta';
+                            typeElement.className = 'badge bg-success position-absolute start-0 top-0 m-2';
+                        } else if (type === 'AUCTION') {
+                            typeElement.innerHTML = '<i class="fas fa-gavel me-1"></i>Leilão';
+                            typeElement.className = 'badge bg-danger position-absolute start-0 top-0 m-2';
+                        } else {
+                            typeElement.textContent = 'Selecione o tipo';
+                            typeElement.className = 'badge bg-secondary position-absolute start-0 top-0 m-2';
+                        }
+                    }
+                    
+                    // Atualizar preço
+                    const previewPriceElement = document.getElementById('previewPrice');
+                    if (previewPriceElement) {
+                        let price = 0;
+                        if (typeSelect.value === 'DIRECT_SALE' && directSalePriceField.value) {
+                            price = parseFloat(directSalePriceField.value);
+                        } else if (typeSelect.value === 'AUCTION' && startingBidField.value) {
+                            price = parseFloat(startingBidField.value);
+                        }
+                        
+                        const formattedPrice = price > 0 ? price.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }) : '0,00';
+                        previewPriceElement.textContent = formattedPrice + ' moedas';
+                    }
+                    
+                    // Atualizar data para hoje
+                    const previewDate = document.getElementById('previewDate');
+                    if (previewDate) {
+                        const today = new Date().toLocaleDateString('pt-BR');
+                        previewDate.textContent = today;
+                    }
+                }
+
+                // Adicionar listeners para atualização automática do preview
+                const fields = ['name', 'description', 'category', 'rarity', 'directSalePrice', 'startingBid'];
+                fields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.addEventListener('input', updatePreviewFromFields);
+                        field.addEventListener('change', updatePreviewFromFields);
+                    }
+                });
                 
-                // Handle form submission with extra validation
+                // Listener especial para o tipo
+                if (typeSelect) {
+                    typeSelect.addEventListener('change', updatePreviewFromFields);
+                }
+                
+                // Listener para upload de imagem
+                const imageInput = document.getElementById('image');
+                if (imageInput) {
+                    imageInput.addEventListener('change', updatePreview);
+                }
+                
+                // Validação adicional no envio do formulário
                 const form = document.querySelector('form');
                 if (form) {
                     form.addEventListener('submit', function(e) {
-                        e.preventDefault(); // Temporarily prevent form submission
+                        e.preventDefault();
                         const selectedType = typeSelect.value;
                         
                         if (selectedType === 'AUCTION') {
-                            // For auctions, confirm price is set to starting bid
                             if (startingBidField.value) {
                                 priceField.value = startingBidField.value;
-                                console.log("Auction submission: Price set to:", priceField.value);
-                                console.log("Starting bid value:", startingBidField.value);
                             } else {
                                 alert("Por favor, informe um lance inicial válido.");
                                 startingBidField.focus();
-                                return; // Stop submission
+                                return;
                             }
                         } else if (selectedType === 'DIRECT_SALE') {
-                            // For direct sales, confirm price is set
                             if (directSalePriceField.value) {
                                 priceField.value = directSalePriceField.value;
                             } else {
                                 alert("Por favor, informe um preço válido.");
                                 directSalePriceField.focus();
-                                return; // Stop submission
+                                return;
                             }
                         }
                         
-                        // Final check that price is set before submitting
                         if (!priceField.value || parseFloat(priceField.value) <= 0) {
-                            console.error("Price is still zero or invalid:", priceField.value);
                             alert("Erro: O preço não foi definido corretamente. Por favor, tente novamente.");
-                            return; // Stop submission
+                            return;
                         }
                         
-                        console.log("Form submitting with final price:", priceField.value);
-                        form.submit(); // Actually submit the form
+                        form.submit();
                     });
                 }
+                
+                // Atualizar preview inicial
+                updatePreviewFromFields();
             });
         </script>
     </th:block>

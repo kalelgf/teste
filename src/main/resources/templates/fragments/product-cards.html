@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-br" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<div th:fragment="direct-sale-card(product)" class="col-md-6 col-lg-4">
+    <div class="card h-100 product-card">
+        <div class="product-img-container">
+            <img th:src="${product.imageUrl != null ? '/images/' + product.imageUrl : '/images/default-product.jpg'}" 
+                 class="product-img" 
+                 alt="Imagem do Produto"
+                 th:data-full-image="${product.imageUrl != null ? '/images/' + product.imageUrl : '/images/default-product.jpg'}"
+                 onclick="openImageModal(this)"
+                 onerror="this.src='/images/default-product.jpg';">
+
+            <span class="badge product-category-badge bg-dark position-absolute end-0 top-0 m-2" 
+                  th:text="${product.category != null ? product.category.displayName : 'Sem categoria'}">Categoria</span>
+            
+            <span class="badge bg-success position-absolute start-0 top-0 m-2">
+                <i class="fas fa-shopping-cart me-1"></i>Venda Direta
+            </span>
+            
+            <span th:if="${product.rarity}" 
+                  class="badge position-absolute start-0 bottom-0 m-2"
+                  th:classappend="${product.rarity.name() == 'COMUM' ? 'bg-secondary' : 
+                          (product.rarity.name() == 'INCOMUM' ? 'bg-success' : 
+                           (product.rarity.name() == 'RARO' ? 'bg-primary' : 
+                            (product.rarity.name() == 'MUITO_RARO' ? 'bg-warning' : 
+                             (product.rarity.name() == 'LENDARIO' ? 'bg-danger' : 'bg-gold'))))}"
+                  th:text="${product.rarity.displayName}">
+                Raridade
+            </span>
+        </div>
+        
+        <div class="card-body">
+            <h5 class="card-title rpg-font" th:text="${product.name}">Nome do Produto</h5>
+            <p class="card-text text-truncate" th:text="${product.description}">Descrição do produto...</p>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="product-price fs-5" 
+                      th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 2, 'COMMA') + ' moedas'}">0,00 moedas</span>
+                <a th:href="@{/item/{id}(id=${product.id})}" class="btn btn-sm btn-gold">
+                    <i class="fas fa-eye me-1"></i>Detalhes
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="fas fa-user me-1"></i>
+                <span th:text="${product.seller.username}">Vendedor</span>
+            </small>
+            <small class="text-muted" th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
+        </div>
+    </div>
+</div>
+
+<!-- Fragment para Card de Leilão -->
+<div th:fragment="auction-card(auction)" class="col-md-6 col-lg-4">    <div class="card h-100 product-card auction-item">
+        <div class="product-img-container">
+            <img th:src="${auction.imageUrl != null ? '/images/' + auction.imageUrl : '/images/default-product.jpg'}" 
+                 class="product-img" 
+                 alt="Imagem do Produto"
+                 th:data-full-image="${auction.imageUrl != null ? '/images/' + auction.imageUrl : '/images/default-product.jpg'}"
+                 onclick="openImageModal(this)"
+                 onerror="this.src='/images/default-product.jpg';">
+
+            <span class="badge product-category-badge bg-dark position-absolute end-0 top-0 m-2" 
+                  th:text="${auction.category != null ? auction.category.displayName : 'Sem categoria'}">Categoria</span>
+            
+            <span class="badge bg-danger position-absolute start-0 top-0 m-2">
+                <i class="fas fa-gavel me-1"></i>Leilão
+            </span>
+            
+            <span th:if="${auction.rarity}" 
+                  class="badge position-absolute start-0 bottom-0 m-2"
+                  th:classappend="${auction.rarity.name() == 'COMUM' ? 'bg-secondary' : 
+                          (auction.rarity.name() == 'INCOMUM' ? 'bg-success' : 
+                           (auction.rarity.name() == 'RARO' ? 'bg-primary' : 
+                            (auction.rarity.name() == 'MUITO_RARO' ? 'bg-warning' : 
+                             (auction.rarity.name() == 'LENDARIO' ? 'bg-danger' : 'bg-gold'))))}"
+                  th:text="${auction.rarity.displayName}">
+                Raridade
+            </span>
+        </div>
+        
+        <div class="card-body">
+            <h5 class="card-title rpg-font" th:text="${auction.name}">Nome do Produto</h5>
+            <p class="card-text text-truncate" th:text="${auction.description}">Descrição do produto...</p>
+            
+            <div class="auction-timer p-2 mb-3 rounded bg-dark text-light">
+                <i class="fas fa-hourglass-half me-1 text-warning"></i>
+                <span class="countdown fw-bold" 
+                      th:data-end-date="${#temporals.format(auction.auctionEndDate, 'yyyy-MM-dd''T''HH:mm:ss')}">
+                    Calculando...
+                </span>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="product-price fs-5" 
+                          th:text="${#numbers.formatDecimal(auction.price != null ? auction.price : 0, 0, 'POINT', 2, 'COMMA') + ' moedas'}">0,00 moedas</span>
+                    <small class="text-muted d-block">Lance Atual</small>
+                </div>
+                <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-gold">
+                    <i class="fas fa-gavel me-1"></i>Dar Lance                </a>
+            </div>
+            
+            <div th:if="${auction.buyNowPrice != null}" class="mt-2 pt-2 border-top">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold" 
+                              th:text="${#numbers.formatDecimal(auction.buyNowPrice, 0, 'POINT', 2, 'COMMA') + ' moedas'}">0,00 moedas</span>
+                        <small class="text-muted d-block">Compra Imediata</small>
+                    </div>
+                    <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-shopping-cart me-1"></i>Comprar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="fas fa-user me-1"></i>
+                <span th:text="${auction.seller.username}">Vendedor</span>
+            </small>
+            <small class="text-muted" th:text="${#temporals.format(auction.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
+        </div>
+    </div>
+</div>
+
+<!-- Card de Venda Direta sem badge de tipo -->
+<div th:fragment="direct-sale-card-no-badge(product)" class="col-md-6 col-lg-4">
+    <div class="card h-100 product-card">
+        <div class="product-img-container">
+            <img th:src="${product.imageUrl != null ? '/images/' + product.imageUrl : '/images/default-product.jpg'}" 
+                 class="product-img" 
+                 alt="Imagem do Produto"
+                 th:data-full-image="${product.imageUrl != null ? '/images/' + product.imageUrl : '/images/default-product.jpg'}"
+                 onclick="openImageModal(this)"
+                 onerror="this.src='/images/default-product.jpg';">
+
+            <span class="badge product-category-badge bg-dark position-absolute end-0 top-0 m-2" 
+                  th:text="${product.category != null ? product.category.displayName : 'Sem categoria'}">Categoria</span>
+            
+            <span th:if="${product.rarity}" 
+                  class="badge position-absolute start-0 bottom-0 m-2"
+                  th:classappend="${product.rarity.name() == 'COMUM' ? 'bg-secondary' : 
+                          (product.rarity.name() == 'INCOMUM' ? 'bg-success' : 
+                           (product.rarity.name() == 'RARO' ? 'bg-primary' : 
+                            (product.rarity.name() == 'MUITO_RARO' ? 'bg-warning' : 
+                             (product.rarity.name() == 'LENDARIO' ? 'bg-danger' : 'bg-gold'))))}"
+                  th:text="${product.rarity.displayName}">
+                Raridade
+            </span>
+        </div>
+        
+        <div class="card-body">
+            <h5 class="card-title rpg-font" th:text="${product.name}">Nome do Produto</h5>
+            <p class="card-text text-truncate" th:text="${product.description}">Descrição do produto...</p>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="product-price fs-5" 
+                      th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 2, 'COMMA') + ' moedas'}">0,00 moedas</span>
+                <a th:href="@{/item/{id}(id=${product.id})}" class="btn btn-sm btn-gold">
+                    <i class="fas fa-eye me-1"></i>Detalhes
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="fas fa-user me-1"></i>
+                <span th:text="${product.seller.username}">Vendedor</span>
+            </small>
+            <small class="text-muted" th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
+        </div>
+    </div>
+</div>
+
+<!-- Fragment para Card de Leilão (sem badge vermelho - para página específica) -->
+<div th:fragment="auction-card-no-badge(auction)" class="col-md-6 col-lg-4">
+    <div class="card h-100 product-card auction-item">
+        <div class="product-img-container">
+            <img th:src="${auction.imageUrl != null ? '/images/' + auction.imageUrl : '/images/default-product.jpg'}" 
+                 class="product-img" 
+                 alt="Imagem do Produto"
+                 th:data-full-image="${auction.imageUrl != null ? '/images/' + auction.imageUrl : '/images/default-product.jpg'}"
+                 onclick="openImageModal(this)"
+                 onerror="this.src='/images/default-product.jpg';">            <span class="badge product-category-badge bg-dark position-absolute end-0 top-0 m-2"
+                  th:text="${auction.category != null ? auction.category.displayName : 'Sem categoria'}">Categoria</span>            <span th:if="${auction.rarity}"
+                  class="badge position-absolute start-0 bottom-0 m-2"
+                  th:classappend="${auction.rarity.name() == 'COMUM' ? 'bg-secondary' : 
+                          (auction.rarity.name() == 'INCOMUM' ? 'bg-success' : 
+                           (auction.rarity.name() == 'RARO' ? 'bg-primary' : 
+                            (auction.rarity.name() == 'MUITO_RARO' ? 'bg-warning' : 
+                             (auction.rarity.name() == 'LENDARIO' ? 'bg-danger' : 'bg-gold'))))}"
+                  th:text="${auction.rarity.displayName}">
+                Raridade
+            </span>
+        </div>
+        
+        <div class="card-body">
+            <h5 class="card-title rpg-font" th:text="${auction.name}">Nome do Produto</h5>
+            <p class="card-text text-truncate" th:text="${auction.description}">Descrição do produto...</p>
+            
+            <div class="auction-timer p-2 mb-3 rounded bg-dark text-light">
+                <i class="fas fa-hourglass-half me-1 text-warning"></i>
+                <span class="countdown fw-bold" 
+                      th:data-end-date="${#temporals.format(auction.auctionEndDate, 'yyyy-MM-dd''T''HH:mm:ss')}">
+                    Calculando...
+                </span>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="product-price fs-5" 
+                          th:text="${#numbers.formatDecimal(auction.price != null ? auction.price : 0, 0, 'POINT', 2, 'COMMA') + ' moedas'}">0,00 moedas</span>
+                    <small class="text-muted d-block">Lance Atual</small>
+                </div>
+                <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-gold">
+                    <i class="fas fa-gavel me-1"></i>Dar Lance
+                </a>
+            </div>
+            
+            <div th:if="${auction.buyNowPrice != null}" class="mt-2 pt-2 border-top">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-success fw-bold" 
+                              th:text="${#numbers.formatDecimal(auction.buyNowPrice, 0, 'POINT', 2, 'COMMA') + ' moedas'}">0,00 moedas</span>
+                        <small class="text-muted d-block">Compra Imediata</small>
+                    </div>
+                    <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-shopping-cart me-1"></i>Comprar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="fas fa-user me-1"></i>
+                <span th:text="${auction.seller.username}">Vendedor</span>
+            </small>
+            <small class="text-muted" th:text="${#temporals.format(auction.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
+        </div>
+    </div>
+</div>
+
+</html>

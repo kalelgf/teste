@@ -1,0 +1,1370 @@
+/* ===================================
+   RESPONSIVE DESIGN FOR RPG MARKET
+   ===================================
+   
+   Este arquivo trata especificamente dos problemas de responsividade:
+   1. Header fixo em mobile
+   2. Footer reduzido em telas pequenas
+   3. Imagem padrão para usuários sem avatar
+   4. Melhorias gerais de layout mobile
+*/
+
+/* ===== HEADER RESPONSIVO ===== */
+@media (max-width: 768px) {
+    /* Header fixo no topo em mobile */
+    .navbar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1030;
+        margin-bottom: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Compensar altura do header fixo */
+    body.rpg-theme {
+        padding-top: 76px; /* Altura aproximada do navbar */
+    }
+    
+    /* Ajustar espaçamento do main content */
+    main.container {
+        padding-top: 1rem;
+        margin-top: 0;
+    }
+    
+    /* Garantir que o header fique sempre visível */
+    header {
+        margin-bottom: 0 !important;
+    }
+      /* Navbar brand menor em mobile */
+    .navbar-brand {
+        font-size: 1.4rem !important;
+    }
+    
+    /* Search form responsiva */
+    .search-form {
+        max-width: 100%;
+        margin: 0.5rem 0;
+    }
+    
+    /* Dropdown menu melhor posicionado */
+    .dropdown-menu {
+        margin-top: 0.5rem;
+        z-index: 1035; /* Maior que o navbar fixo */
+    }
+    
+    /* Garantir que dropdown funcione em mobile */
+    .navbar-collapse {
+        z-index: 1031;
+    }
+}
+
+/* ===== FOOTER RESPONSIVO ===== */
+@media (max-width: 768px) {
+    /* Footer compacto em mobile */
+    footer {
+        padding: 1.5rem 0 1rem 0 !important; /* Reduzido significativamente */
+    }
+    
+    /* Reduzir margens entre seções */
+    footer .row {
+        margin-bottom: 0;
+    }
+    
+    footer .col-md-4 {
+        margin-bottom: 1rem;
+    }
+    
+    footer .col-md-4:last-child {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Títulos menores no footer */
+    footer h5 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Texto menor no footer */
+    footer p, footer li {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    /* Links do footer mais compactos */
+    footer ul li {
+        margin-bottom: 0.1rem;
+    }
+    
+    /* Ícones sociais menores */
+    footer .d-flex a {
+        font-size: 1.1rem !important;
+    }
+    
+    /* Copyright menor e mais compacto */
+    footer .text-center {
+        margin-top: 0.5rem !important;
+    }
+    
+    footer .text-center p {
+        font-size: 0.7rem;
+        margin-bottom: 0 !important;
+    }
+}
+
+/* ===== AVATAR/IMAGEM PADRÃO ===== */
+/* Estilo para imagem padrão quando não há avatar */
+.user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: var(--secondary-color, #d4af37);
+    border: 2px solid var(--primary-color, #8b0000);
+    flex-shrink: 0; /* Evita que a imagem seja comprimida */
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+}
+
+/* Fallback mais robusto para quando imagem não carrega */
+.user-avatar[src=""], 
+.user-avatar[src*="default-user.jpg"],
+.user-avatar[src*="null"],
+.user-avatar:not([src]) {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTUiIGN5PSIxNSIgcj0iMTUiIGZpbGw9IiNkNGFmMzciLz4KPHBhdGggZD0iTTE1IDhDMTIuNzkgOCAxMSA9Ljc5IDExIDEyQzExIDE0LjIxIDEyLjc5IDE2IDE1IDE2QzE3LjIxIDE2IDE5IDE0LjIxIDE5IDEyQzE5IDkuNzkgMTcuMjEgOCAxNSA4WiIgZmlsbD0iIzJjMmMyYyIvPgo8cGF0aCBkPSJNMTUgMThDMTEuNjkgMTggOSAyMC42OSA5IDI0VjI2SDE1SDIxVjI0QzIxIDIwLjY5IDE4LjMxIDE4IDE1IDE4WiIgZmlsbD0iIzJjMmMyYyIvPgo8L3N2Zz4K');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+
+/* CSS para o erro de carregamento de imagem do avatar */
+.user-avatar[onerror] {
+    background-color: var(--secondary-color, #d4af37);
+}
+
+/* ===== SISTEMA DE IMAGENS DE PRODUTOS ===== */
+/* Container de imagem padrão para cards */
+.product-img-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background-color: #f8f5e6;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Imagem do produto nos cards - sempre cropada */
+.product-img-container .product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+/* Hover effect nos cards */
+.product-img-container .product-img:hover {
+    transform: scale(1.05);
+}
+
+/* ===== TRATAMENTO ESPECIAL PARA IMAGEM PADRÃO ===== */
+/* Imagem padrão "Produto sem imagem" - deve ser exibida por completo */
+img[src*="default-product.jpg"],
+.product-img[src*="default-product.jpg"] {
+    object-fit: contain !important;
+    padding: 15px;
+    background-color: #f8f5e6;
+    border: 1px solid #e0d4b8;
+}
+
+/* Remover hover da imagem padrão para melhor legibilidade */
+img[src*="default-product.jpg"]:hover,
+.product-img[src*="default-product.jpg"]:hover {
+    transform: none !important;
+    cursor: default;
+}
+
+/* ===== MODAL DE IMAGEM ===== */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.image-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.image-modal img {
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1051;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.image-modal-close:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* ===== PREVIEW NA CRIAÇÃO DE ITEM ===== */
+.product-preview-card {
+    max-width: 300px;
+    margin-top: 20px;
+}
+
+.preview-img-container {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background-color: #f8f5e6;
+    border-radius: 8px 8px 0 0;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Imagem padrão no preview */
+.preview-img[src*="default-product.jpg"] {
+    object-fit: contain !important;
+    padding: 15px;
+    background-color: #f8f5e6;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* ===== CARDS DE PRODUTO RESPONSIVOS ===== */
+@media (max-width: 768px) {
+    /* Cards de produto em mobile */
+    .product-card {
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        min-height: 350px; /* Altura mínima garantida para mobile */
+    }
+    
+    .product-img-container {
+        height: 150px; /* Reduzido de 200px */
+    }
+    
+    /* Categoria badge menor em mobile */
+    .product-category-badge {
+        font-size: 0.7rem !important;
+        padding: 0.25rem 0.5rem !important;
+        top: 8px;
+        right: 8px;
+    }
+    
+    /* Preço menor */
+    .product-price {
+        font-size: 1rem !important;
+        font-weight: bold;
+        color: var(--gold-color, #d4af37);
+    }
+    
+    /* Título do produto responsivo */
+    .product-card .card-title {
+        font-size: 1rem;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Descrição do produto responsiva */
+    .product-card .card-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    
+    /* Botão Ver Detalhes responsivo */
+    .product-card .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* ===== LAYOUT GERAL MOBILE ===== */
+@media (max-width: 576px) {
+    /* Container mais apertado em mobile muito pequeno */
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    /* Títulos de seção menores */
+    .section-title {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Botões dourados menores */
+    .btn-gold {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Search input menor */
+    .search-input {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* ===== GRID DE CATEGORIAS RESPONSIVO ===== */
+@media (max-width: 575.98px) {
+    /* 2 colunas em mobile muito pequeno */
+    .category-grid .col-6,
+    .category-grid .col-md-3,
+    .category-grid .col-lg-2 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding: 0.25rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    /* 3 colunas em mobile médio */
+    .category-grid .col-6,
+    .category-grid .col-md-3,
+    .category-grid .col-lg-2 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+        padding: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    /* 4 colunas em tablet */
+    .category-grid .col-md-3,
+    .category-grid .col-lg-2 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+}
+
+@media (min-width: 992px) {
+    /* 6 colunas em desktop */
+    .category-grid .col-lg-2 {
+        flex: 0 0 16.666667%;
+        max-width: 16.666667%;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Ícones de categoria menores */
+    .category-icon {
+        font-size: 1.5rem !important;
+    }
+    
+    /* Texto de categoria menor */
+    .category-card .card-body {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .category-card h6,
+    .category-card h5 {
+        font-size: 0.8rem;
+        line-height: 1.2;
+        margin-bottom: 0;
+    }
+    
+    /* Cards de categoria mais compactos */
+    .category-card {
+        border-radius: 8px;
+        transition: transform 0.2s ease;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-2px);
+    }
+}
+
+/* ===== MELHORIAS ADICIONAIS ===== */
+@media (max-width: 768px) {
+    /* Remover margens excessivas */
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* Ajustar espaçamento de parágrafos */
+    p {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Melhorar espaçamento dos cards */
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Nav tabs responsivas */
+    .nav-tabs .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* ===== MELHORIAS FINAIS PARA RESPONSIVIDADE ===== */
+
+/* Garantir que o layout não quebre em telas muito pequenas */
+@media (max-width: 320px) {
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem !important;
+    }
+    
+    .search-form {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+    
+    .search-input {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .btn-gold {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .product-card .card-title {
+        font-size: 0.9rem;
+    }
+    
+    .product-card .card-text {
+        font-size: 0.8rem;
+    }
+}
+
+/* Otimizações para tablets em modo paisagem */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .product-grid .col-md-6.col-lg-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+    
+    .category-grid .col-md-3.col-lg-2 {
+        flex: 0 0 20%;
+        max-width: 20%;
+    }
+}
+
+/* Melhorias para acessibilidade touch */
+@media (max-width: 768px) {
+    /* Aumentar área de toque */
+    .btn, .nav-link, .dropdown-item, .card-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .product-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Melhorar espaçamento entre elementos clicáveis */
+    .nav-item {
+        margin: 0.1rem 0;
+    }
+    
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Performance otimizations para dispositivos com menos poder de processamento */
+@media (max-width: 768px) {
+    /* Reduzir número de sombras e efeitos */
+    .card {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* Simplificar transições */
+    * {
+        transition-duration: 0.2s;
+    }
+    
+    /* Otimizar rendering de imagens */
+    .product-img {
+        image-rendering: optimizeSpeed;
+    }
+}
+
+/* Fix para problemas de scroll horizontal */
+html, body {
+    overflow-x: hidden;
+}
+
+.container-fluid, .container {
+    max-width: 100%;
+}
+
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Garantir que modais funcionem bem em mobile */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-content {
+        border-radius: 0.75rem;
+    }
+    
+    .modal-header {
+        padding: 1rem 1rem 0.5rem 1rem;
+    }
+    
+    .modal-body {
+        padding: 0.5rem 1rem;
+    }
+    
+    .modal-footer {
+        padding: 0.5rem 1rem 1rem 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+}
+
+/* Melhorias para o welcome banner em mobile */
+@media (max-width: 768px) {
+    .welcome-banner {
+        padding: 2rem 1rem !important;
+        margin-bottom: 2rem !important;
+    }
+    
+    .welcome-banner .display-5 {
+        font-size: 1.5rem;
+    }
+    
+    .welcome-banner .lead {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .welcome-banner .btn-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+}
+
+/* Últimos ajustes para garantir consistência */
+@media (max-width: 768px) {
+    /* Ajustar espaçamento de seções */
+    .market-section {
+        margin-bottom: 2rem !important;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Melhorar legibilidade */
+    .text-muted {
+        color: #666 !important;
+    }
+    
+    /* Garantir que botões tenham boa aparência */
+    .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+}
+
+/* ===== CORREÇÕES ESPECÍFICAS PARA DROPDOWN MOBILE ===== */
+@media (max-width: 991.98px) {
+    /* Garantir que o dropdown do usuário funcione corretamente em mobile */
+    .navbar-nav .dropdown-menu {
+        position: static !important;
+        float: none;
+        width: auto;
+        margin-top: 0;
+        background-color: rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.375rem;
+        box-shadow: none;
+    }
+    
+    .navbar-nav .dropdown-menu.show {
+        display: block;
+    }
+    
+    .navbar-nav .dropdown-item {
+        color: rgba(255, 255, 255, 0.75);
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+        border: 0;
+        text-align: left;
+        width: 100%;
+        display: block;
+        text-decoration: none;
+    }
+    
+    .navbar-nav .dropdown-item:hover,
+    .navbar-nav .dropdown-item:focus {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.15);
+        text-decoration: none;
+    }
+    
+    /* Botão de logout no dropdown */
+    .navbar-nav .dropdown-item button {
+        background: none;
+        border: none;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        width: 100%;
+        padding: 0;
+    }
+    
+    .navbar-nav .dropdown-item button:hover {
+        background: none;
+        color: inherit;
+    }
+    
+    /* Estilo específico para o toggle do dropdown em mobile */
+    .navbar-nav .dropdown-toggle {
+        color: rgba(255, 255, 255, 0.75) !important;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+    }
+    
+    .navbar-nav .dropdown-toggle:hover,
+    .navbar-nav .dropdown-toggle:focus {
+        color: #fff !important;
+        text-decoration: none;
+    }
+    
+    /* Garantir que o ícone de dropdown apareça */
+    .navbar-nav .dropdown-toggle::after {
+        display: inline-block;
+        margin-left: 0.255em;
+        vertical-align: 0.255em;
+        content: "";
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-bottom: 0;
+        border-left: 0.3em solid transparent;
+    }      /* Avatar do usuário em mobile */
+    .navbar-nav .user-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        margin-right: 0.5rem;
+        max-width: 28px !important;
+        max-height: 28px !important;
+    }
+    
+    /* Divider no dropdown */
+    .navbar-nav .dropdown-divider {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 0.5rem 0;
+    }
+}
+
+/* ===== CORREÇÕES ESPECÍFICAS PARA DROPDOWN DO USUÁRIO ===== */
+
+/* Mobile - Dropdown do usuário fora do collapse */
+@media (max-width: 991.98px) {    
+    /* Dropdown do usuário em mobile - sempre visível */
+    .navbar-nav.d-lg-none {
+        position: absolute;
+        right: 70px; /* Mais espaço para o toggler */
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1031;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    
+    /* Ocultar avatar quando menu principal está aberto */
+    .navbar-toggler[aria-expanded="true"] ~ .navbar-nav.d-lg-none {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+      /* Dropdown menu melhor estilizado em mobile */
+    .navbar-nav.d-lg-none .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: auto;
+        margin-top: 0.5rem;
+        min-width: 200px;
+        background-color: rgba(33, 37, 41, 0.95);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Itens do dropdown em mobile */
+    .navbar-nav.d-lg-none .dropdown-item {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        margin: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    
+    .navbar-nav.d-lg-none .dropdown-item:hover,
+    .navbar-nav.d-lg-none .dropdown-item:focus {
+        background-color: rgba(212, 175, 55, 0.2);
+        color: #d4af37;
+    }/* Avatar menor em mobile */
+    .d-lg-none .user-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        opacity: 1;
+        filter: none;
+        max-width: 28px !important;
+        max-height: 28px !important;
+    }
+      /* Garantir que o link do dropdown seja visível e clicável */
+    .d-lg-none .dropdown-toggle {
+        color: rgba(255, 255, 255, 1) !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        background: none !important;
+        border: none !important;
+        padding: 0.375rem 0.5rem;
+        border-radius: 0.375rem;
+        transition: background-color 0.15s ease-in-out;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+    
+    .d-lg-none .dropdown-toggle:hover,
+    .d-lg-none .dropdown-toggle:focus {
+        color: rgba(255, 255, 255, 1) !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        text-decoration: none;
+    }
+      /* Menu dropdown específico para mobile - melhor estética */
+    .d-lg-none .dropdown-menu {
+        position: absolute;
+        right: 0;
+        left: auto;
+        min-width: 220px;
+        margin-top: 0.5rem;
+        z-index: 1035;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background-color: rgba(33, 37, 41, 0.95);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Prevenir que o dropdown seja afetado pelo collapse */
+    .d-lg-none .dropdown-menu.show {
+        display: block !important;
+        position: absolute !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+      /* Melhorar aparência do dropdown em mobile */
+    .d-lg-none .dropdown-item {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.85);
+        transition: all 0.2s ease;
+    }
+    
+    .d-lg-none .dropdown-item:hover,
+    .d-lg-none .dropdown-item:focus {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transform: translateX(5px);
+    }
+    
+    /* Ícones no dropdown */
+    .d-lg-none .dropdown-item i {
+        width: 16px;
+        text-align: center;
+    }
+    
+    /* Divider melhorado */
+    .d-lg-none .dropdown-divider {
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 0.5rem 0;
+    }
+    
+    /* Ocultar texto do usuário em telas muito pequenas */
+    @media (max-width: 575.98px) {
+        .d-none.d-sm-inline {
+            display: none !important;
+        }
+        
+        .navbar-nav.d-lg-none {
+            right: 50px;
+        }
+    }
+}
+
+/* Desktop - Dropdown do usuário normal */
+@media (min-width: 992px) {
+    .d-none.d-lg-block .dropdown-menu {
+        background-color: rgba(33, 37, 41, 0.95);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        min-width: 220px;
+    }
+    
+    .d-none.d-lg-block .dropdown-item {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        margin: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    
+    .d-none.d-lg-block .dropdown-item:hover,
+    .d-none.d-lg-block .dropdown-item:focus {
+        background-color: rgba(212, 175, 55, 0.2);
+        color: #d4af37;
+    }
+    
+    /* Melhor espaçamento para o toggle do dropdown */
+    .d-none.d-lg-block .dropdown-toggle {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        transition: background-color 0.15s ease-in-out;
+    }
+    
+    .d-none.d-lg-block .dropdown-toggle:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* ===== CORREÇÃO ADICIONAL PARA DROPDOWNS MOBILE ===== */
+
+/* Forçar z-index adequado para dropdowns */
+.navbar .dropdown-menu {
+    z-index: 1050 !important;
+}
+
+.navbar .dropdown-menu.show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Melhorar posicionamento em mobile */
+@media (max-width: 991.98px) {
+    /* Container do avatar do usuário */
+    .navbar-nav.d-lg-none {
+        margin-right: 0;
+    }
+    
+    .navbar-nav.d-lg-none .dropdown {
+        position: relative;
+    }
+    
+    .navbar-nav.d-lg-none .dropdown-menu {
+        position: absolute !important;
+        top: 100% !important;
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        will-change: auto !important;
+    }
+    
+    /* Garantir que o dropdown seja clicável */
+    .navbar-nav.d-lg-none .dropdown-toggle {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    
+    /* Garantir que o menu não seja afetado por backdrop */
+    .navbar-nav.d-lg-none .dropdown-menu {        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+    
+    /* Overlay backdrop para mobile */
+    .dropdown-backdrop {
+        display: none;
+    }
+    
+    .dropdown.show .dropdown-backdrop {
+        display: block;
+    }
+}
+
+/* Melhorar aparência do toggle */
+.dropdown-toggle::after {
+    margin-left: 0.5rem;
+}
+
+.navbar-nav.d-lg-none .dropdown-toggle::after {
+    margin-left: 0.3rem;
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+}
+
+/* Animação suave para dropdowns */
+.dropdown-menu {
+    transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Garantir que eventos de clique funcionem */
+.dropdown-toggle,
+.dropdown-item {
+    pointer-events: auto !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Fix para touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .dropdown:hover .dropdown-menu {
+        display: none;
+    }
+    
+    .dropdown.show .dropdown-menu {
+        display: block !important;
+    }
+    
+    /* Garantir que o toque funcione em mobile */
+    .navbar-nav.d-lg-none .dropdown-toggle {        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Correção específica para problema de visibilidade */
+@media (max-width: 991.98px) {
+    .navbar-nav.d-lg-none .nav-link {
+        color: rgba(255, 255, 255, 1) !important;
+    }
+    
+    .navbar-nav.d-lg-none .nav-link:hover,
+    .navbar-nav.d-lg-none .nav-link:focus {
+        color: rgba(255, 255, 255, 1) !important;
+    }
+}
+
+/* ===== LAYOUT DESKTOP MELHORADO ===== */
+@media (min-width: 1200px) {
+    /* Limitar largura máxima do container em telas muito grandes */
+    .container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Melhorar espaçamento do main content */
+    main.container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+      /* Avatar normal em desktop */
+    .user-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        max-width: 32px !important;
+        max-height: 32px !important;
+    }
+}
+
+@media (min-width: 1400px) {
+    /* Em telas muito grandes, aumentar ligeiramente o container */
+    .container {
+        max-width: 1320px;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    /* Mais espaçamento em telas muito grandes */
+    main.container {
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem;
+    }
+}
+
+/* ===== CORREÇÕES PARA LAYOUT GERAL ===== */
+/* Evitar que o conteúdo ocupe 100% da largura */
+.container {
+    max-width: 1200px; /* Limitar largura máxima */
+    margin: 0 auto; /* Centralizar */
+}
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px; /* Bootstrap padrão para xl */
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1320px; /* Bootstrap padrão para xxl */
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+/* Melhorar espaçamento das linhas */
+.row {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+}
+
+/* Garantir que o main content tenha bom espaçamento */
+main.container {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+.col, .col-auto, .col-1, .col-2, .col-3, .col-4, .col-5, .col-6, 
+.col-7, .col-8, .col-9, .col-10, .col-11, .col-12,
+.col-sm, .col-sm-auto, .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, 
+.col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, 
+.col-sm-11, .col-sm-12,
+.col-md, .col-md-auto, .col-md-1, .col-md-2, .col-md-3, .col-md-4, 
+.col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, 
+.col-md-11, .col-md-12,
+.col-lg, .col-lg-auto, .col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, 
+.col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, 
+.col-lg-11, .col-lg-12,
+.col-xl, .col-xl-auto, .col-xl-1, .col-xl-2, .col-xl-3, .col-xl-4, 
+.col-xl-5, .col-xl-6, .col-xl-7, .col-xl-8, .col-xl-9, .col-xl-10, 
+.col-xl-11, .col-xl-12 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+/* ===== GRID DE PRODUTOS MELHORADO ===== */
+/* Limitar o grid de produtos a não ocupar toda a largura */
+@media (min-width: 1200px) {
+    /* Em telas grandes, usar mais colunas para produtos */
+    .product-grid .col-lg-4 {
+        flex: 0 0 auto;
+        width: 20%; /* 5 colunas em vez de 3 */
+    }
+}
+
+@media (min-width: 1400px) {
+    /* Em telas muito grandes, usar ainda mais colunas */
+    .product-grid .col-lg-4 {
+        width: 16.666667%; /* 6 colunas */
+    }
+}
+
+/* Grid de categorias também melhorado */
+@media (min-width: 1200px) {
+    .categories-grid .col-lg-2 {
+        flex: 0 0 auto;
+        width: 14.285714%; /* 7 colunas em vez de 6 */
+    }
+}
+
+@media (min-width: 1400px) {
+    .categories-grid .col-lg-2 {
+        width: 12.5%; /* 8 colunas */
+    }
+}
+
+/* ===== CORREÇÕES ESPECÍFICAS PARA PÁGINAS DE USUÁRIO ===== */
+/* Garantir que todas as páginas tenham o mesmo header escuro */
+.navbar {
+    background-color: #212529 !important; /* bg-dark do Bootstrap */
+}
+
+/* Garantir consistência nas páginas de usuário */
+body.rpg-theme {
+    background-color: #f8f9fa;
+}
+
+/* Container consistente em todas as páginas */
+main.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (min-width: 1200px) {
+    main.container {
+        max-width: 1140px;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+@media (min-width: 1400px) {
+    main.container {
+        max-width: 1320px;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+/* Garantir tamanho consistente do avatar em todas as páginas */
+.navbar .user-avatar,
+.user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+}
+
+/* Avatar específico para mobile */
+@media (max-width: 991.98px) {
+    .navbar .d-lg-none .user-avatar,
+    .d-lg-none .user-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        max-width: 28px !important;
+        max-height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+    }
+}
+
+/* ===== MELHORIAS NOS CARDS DA PÁGINA INICIAL ===== */
+/* Corrigir altura dos cards da seção de vendas na página inicial */
+.bulletin-board .product-card {
+    min-height: 420px !important; /* Altura mínima para os cards da seção de vendas */
+}
+
+.auction-area .product-card {
+    min-height: 450px !important; /* Altura mínima para os cards de leilão (com timer) */
+}
+
+/* Garantir que o card-body tenha altura apropriada */
+.product-card .card-body {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.product-card .card-body .card-text {
+    flex-grow: 1; /* Permite que a descrição ocupe o espaço disponível */
+    margin-bottom: 1rem;    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limita a 3 linhas */
+    line-clamp: 3; /* Padrão W3C */
+    -webkit-box-orient: vertical;
+}
+
+/* Melhorar espaçamento nos cards da página inicial */
+@media (min-width: 992px) {
+    .bulletin-board .product-card {
+        min-height: 440px !important;
+    }
+    
+    .auction-area .product-card {
+        min-height: 470px !important;
+    }
+    
+    .product-img-container {
+        height: 220px !important; /* Altura maior para desktop */
+    }
+}
+
+/* Fixar altura dos cards em mobile específico para página inicial */
+@media (max-width: 768px) {
+    .bulletin-board .product-card {
+        min-height: 380px !important;
+    }
+    
+    .auction-area .product-card {
+        min-height: 420px !important;
+    }
+    
+    .product-img-container {
+        height: 160px !important; /* Altura ajustada para mobile */
+    }
+}
+
+/* Garantir que os botões fiquem sempre no fundo do card */
+.product-card .card-body .d-flex.justify-content-between {
+    margin-top: auto; /* Empurra os botões para o fundo */
+}
+
+/* Melhorar aparência dos auction timers */
+.auction-timer {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-left: 4px solid #f39c12;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Correção adicional para garantir consistência */
+.market-item {
+    min-height: 420px !important;
+}
+
+.auction-item {
+    min-height: 450px !important;
+}
+
+/* Grid mais consistente para a página inicial */
+.product-grid .col-md-6.col-lg-4 {
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1200px) {
+    .product-grid .col-md-6.col-lg-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+}
+
+/* ===== BACKGROUND DAS PÁGINAS COM PERGAMINHO ===== */
+/* Background geral das páginas usando a imagem de pergaminho */
+body.rpg-theme {
+    background-image: url('../images/bg-default.png?v=2');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* Garantir que o conteúdo tenha contraste adequado sobre o pergaminho */
+main.container {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
+
+/* Ajuste para mobile */
+@media (max-width: 768px) {
+    main.container {
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        border-radius: 10px;
+    }
+    
+    body.rpg-theme {
+        background-attachment: scroll; /* Melhor performance em mobile */
+    }
+}
+
+/* ===== CORREÇÃO FINAL PARA IMAGEM PADRÃO DE PRODUTOS ===== */
+/* Garantir que a imagem padrão seja sempre exibida corretamente */
+img[src$="default-product.jpg"],
+img[src*="/images/default-product.jpg"],
+.product-img[src$="default-product.jpg"],
+.product-img[src*="/images/default-product.jpg"] {
+    object-fit: contain !important;
+    object-position: center !important;
+    padding: 8px !important;
+    background-color: #f8f5e6 !important;
+    border: 1px solid rgba(210, 180, 140, 0.3) !important;
+}
+
+/* Remover transformações de hover para melhor legibilidade */
+img[src$="default-product.jpg"]:hover,
+img[src*="/images/default-product.jpg"]:hover,
+.product-img[src$="default-product.jpg"]:hover,
+.product-img[src*="/images/default-product.jpg"]:hover {
+    transform: none !important;
+}
+
+/* Para container de produtos, garantir altura adequada */
+.product-img-container:has(img[src*="default-product.jpg"]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f5e6;
+}

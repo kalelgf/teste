@@ -14,6 +14,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -21,6 +23,8 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/checkout")
 public class CheckoutController {
+
+    private static final Logger log = LoggerFactory.getLogger(CheckoutController.class);
 
     @Autowired
     private CheckoutService checkoutService;
@@ -176,8 +180,10 @@ public class CheckoutController {
             @ModelAttribute CheckoutRequest request,
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
-        
-        try {
+          try {
+            log.info("Confirm purchase request: productId={}, bidAmount={}, confirmPurchase={}", 
+                     request.getProductId(), request.getBidAmount(), request.getConfirmPurchase());
+            
             Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
             if (userOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Usuário não encontrado");
@@ -189,18 +195,28 @@ public class CheckoutController {
             
             Transaction transaction = checkoutService.confirmPurchase(
                 request.getProductId(), buyer, request);
-              if (transaction != null) {
+            
+            if (transaction != null) {
                 // Compra realizada com sucesso
+                log.info("Purchase successful, redirecting to success page: transactionId={}", transaction.getId());
                 return "redirect:/checkout/sucesso/" + transaction.getId();
             } else {
                 // Foi um lance (retorna null)
+                log.info("Bid successful, redirecting to product page");
                 redirectAttributes.addFlashAttribute("success", "Lance registrado com sucesso!");
-                return "redirect:/item/" + request.getProductId();
+                return "redirect:/item/" + request.getProductId() + "?success=bid";
             }
             
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/checkout/comprar/" + request.getProductId();
+            log.error("Error confirming purchase: ", e);
+            redirectAttributes.addFlashAttribute("error", "Erro ao processar: " + e.getMessage());
+            
+            // Redirect back to appropriate page based on purchase type
+            if (request.getBidAmount() != null) {
+                return "redirect:/checkout/lance/" + request.getProductId() + "?error=" + e.getMessage();
+            } else {
+                return "redirect:/checkout/comprar/" + request.getProductId() + "?error=" + e.getMessage();
+            }
         }
     }
     
@@ -253,12 +269,16 @@ public class CheckoutController {
             if (bidder.getId().equals(product.getSeller().getId())) {
                 return "redirect:/item/" + productId + "?error=own-product";
             }
-            
-            // Prepara o checkout para lance
+              // Prepara o checkout para lance
             CheckoutRequest request = new CheckoutRequest();
             request.setProductId(productId);
-            if (bidAmount != null) {
+            if (bidAmount != null && bidAmount.compareTo(BigDecimal.ZERO) > 0) {
                 request.setBidAmount(bidAmount);
+            } else {
+                // Set default minimum bid if none provided
+                BigDecimal currentPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+                BigDecimal increment = product.getMinBidIncrement() != null ? product.getMinBidIncrement() : BigDecimal.ONE;
+                request.setBidAmount(currentPrice.add(increment));
             }
             
             CheckoutSummary summary = checkoutService.prepareCheckout(productId, bidder, request);
@@ -272,6 +292,23 @@ public class CheckoutController {
         } catch (Exception e) {
             return "redirect:/item/" + productId + "?error=" + e.getMessage();
         }
+    }
+    
+    /**
+     * Página de confirmação de lance - endpoint alternativo para /bid
+     */
+    @GetMapping("/bid")
+    public String bidPage(
+            @RequestParam String productId,
+            @RequestParam(required = false) BigDecimal bidAmount,
+            @AuthenticationPrincipal UserDetails currentUser,
+            Model model) {
+        
+        log.info("Accessing bid page: productId={}, bidAmount={}, user={}", 
+                 productId, bidAmount, currentUser.getUsername());
+        
+        // Redireciona para o endpoint padrão
+        return startBidCheckout(productId, bidAmount, currentUser, model);
     }
     
     /**

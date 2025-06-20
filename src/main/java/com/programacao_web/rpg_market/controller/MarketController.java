@@ -2,7 +2,7 @@ package com.programacao_web.rpg_market.controller;
 
 import com.programacao_web.rpg_market.model.Product;
 import com.programacao_web.rpg_market.model.ProductCategory;
-import com.programacao_web.rpg_market.model.ProductRarity;
+import com.programacao_web.rpg_market.model.ItemRarity;
 import com.programacao_web.rpg_market.model.ProductStatus;
 import com.programacao_web.rpg_market.model.ProductType;
 import com.programacao_web.rpg_market.service.ProductService;
@@ -87,7 +87,7 @@ public class MarketController {
     @GetMapping("/masmorra-dos-leiloes")
     public String showAuctions(
             @RequestParam(required = false) ProductCategory category,
-            @RequestParam(required = false) ProductRarity rarity,
+            @RequestParam(required = false) ItemRarity rarity,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean endingSoon,
@@ -107,13 +107,12 @@ public class MarketController {
             pageable.getPageSize(), 
             Sort.by(direction, sortField)
         );
-        
-        // Usar o novo método de filtro
+          // Usar o novo método de filtro
         model.addAttribute("auctions", productService.findAuctionsWithFilters(
             category, rarity, minPrice, maxPrice, endingSoon, pageRequest));
         
         model.addAttribute("categories", ProductCategory.values());
-        model.addAttribute("rarities", ProductRarity.values());
+        model.addAttribute("rarities", ItemRarity.values());
         
         return "market/auctions";
     }
@@ -125,14 +124,13 @@ public class MarketController {
         model.addAttribute("topBuyers", productService.getTopBuyers());
         return "market/ranking";
     }
-    
-    /**
+      /**
      * Exibe todos os itens de venda direta com opções de filtro e ordenação
      */
     @GetMapping("/vendas-diretas")
     public String showDirectSales(
             @RequestParam(required = false) ProductCategory category,
-            @RequestParam(required = false) ProductRarity rarity,
+            @RequestParam(required = false) ItemRarity rarity,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             Model model,
@@ -146,10 +144,9 @@ public class MarketController {
             maxPrice, 
             pageable
         );
-        
-        model.addAttribute("products", productsPage);
+          model.addAttribute("products", productsPage);
         model.addAttribute("categories", ProductCategory.values());
-        model.addAttribute("rarities", ProductRarity.values());
+        model.addAttribute("rarities", ItemRarity.values());
         
         return "market/direct-sales";
     }

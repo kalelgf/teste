@@ -245,10 +245,10 @@ public class UserController {
     }
     
     // === ADDRESS MANAGEMENT ENDPOINTS ===
-    
-    // Display user addresses
+      // Display user addresses
     @GetMapping("/enderecos")
-    public String showAddresses(@AuthenticationPrincipal UserDetails currentUser, Model model) {        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+    public String showAddresses(@AuthenticationPrincipal UserDetails currentUser, Model model) {
+        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
         if (userOpt.isEmpty()) {
             return "error/403";
         }
@@ -281,13 +281,13 @@ public class UserController {
             @ModelAttribute DeliveryAddress address,
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
-        
-        try {
+          try {
             Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
             if (userOpt.isEmpty()) {
                 return "error/403";
             }
-              User user = userOpt.get();
+            
+            User user = userOpt.get();
             address.setUserId(user.getId());
             
             // If this is the user's first address, make it default
@@ -312,7 +312,8 @@ public class UserController {
             @AuthenticationPrincipal UserDetails currentUser,
             Model model) {
         
-        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());        if (userOpt.isEmpty()) {
+        Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+        if (userOpt.isEmpty()) {
             return "error/403";
         }
         
@@ -336,8 +337,8 @@ public class UserController {
             @ModelAttribute DeliveryAddress updatedAddress,
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
-        
-        try {            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+          try {
+            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
             if (userOpt.isEmpty()) {
                 return "error/403";
             }

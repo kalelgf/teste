@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" 
-      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
@@ -18,17 +18,15 @@
                     <i class="fas fa-scroll me-2"></i>Anunciar Item
                 </a>
                 <a th:href="@{/aventureiro/registrar}" sec:authorize="!isAuthenticated()" class="btn btn-gold btn-lg">
-                    <i class="fas fa-user-plus me-2"></i>Registrar-se
-                </a>
+                    <i class="fas fa-user-plus me-2"></i>Registrar-se                </a>
             </div>
         </div>
         
-        <!-- Categorias Principais -->
         <div class="market-section mb-5">
             <h2 class="rpg-font section-title">
                 <i class="fas fa-tags me-2"></i>Guildas & Mercadores
             </h2>
-            <div class="row g-3">
+            <div class="row g-3 categories-grid">
                 <div class="col-6 col-md-3 col-lg-2" th:each="category : ${categories}">
                     <a th:href="@{/mercado/categoria/{category}(category=${category})}" class="text-decoration-none">
                         <div class="card h-100 category-card">
@@ -49,51 +47,24 @@
                             </div>
                         </div>
                     </a>
-                </div>
-            </div>
+                </div>            </div>
         </div>
         
-        <!-- Itens em Destaque -->
-        <div class="market-section mb-5">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="market-section mb-5">            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="rpg-font section-title mb-0">
                     <i class="fas fa-scroll me-2"></i>Anúncios Recentes
                 </h2>
                 <div>
-                    <a th:href="@{/item/novo}" sec:authorize="isAuthenticated()" class="btn btn-sm btn-outline-secondary ms-2">
+                    <a th:href="@{/item/novo?type=DIRECT_SALE}" sec:authorize="isAuthenticated()" class="btn btn-sm btn-outline-secondary ms-2">
                         <i class="fas fa-plus me-1"></i>Anunciar
                     </a>
                 </div>
             </div>
-            
             <div class="bulletin-board p-3">
-                <div class="row g-4">
-                    <div class="col-md-6 col-lg-4" th:each="product : ${products}">
-                        <div class="card product-card h-100 market-item">
-                            <div class="product-img-container">
-                                <img th:if="${product.imageUrl}" th:src="@{/images/{name}(name=${product.imageUrl})}" class="product-img" alt="Imagem do Produto">
-                                <img th:unless="${product.imageUrl}" th:src="@{/static/images/default-product.jpg}" class="product-img" alt="Imagem Padrão">
-                                <span class="badge product-category-badge bg-dark" th:text="${product.category != null ? product.category.displayName : 'Sem categoria'}">Categoria</span>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title rpg-font" th:text="${product.name}">Nome do Item</h5>
-                                <p class="card-text flex-grow-1" th:text="${#strings.abbreviate(product.description, 100)}">Descrição truncada do item...</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="product-price" th:text="${'$' + #numbers.formatDecimal(product.price != null ? product.price : 0, 0, 'POINT', 2, 'COMMA')}">$99.99</span>
-                                    <a th:href="@{/item/{id}(id=${product.id})}" class="btn btn-sm btn-gold">
-                                        <i class="fas fa-eye me-1"></i>Ver Detalhes
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <small class="text-muted">
-                                    <i class="fas fa-user me-1"></i>
-                                    <span th:text="${product.seller.username}">Vendedor</span>
-                                </small>
-                                <small class="text-muted float-end" th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
-                            </div>
-                        </div>
-                    </div>
+                <div class="row g-4 product-grid">
+                    <th:block th:each="product : ${products}">
+                        <div th:replace="~{fragments/product-cards :: direct-sale-card(${product})}"></div>
+                    </th:block>
                 </div>
                 <div th:if="${#lists.isEmpty(products)}" class="text-center py-4">
                     <p class="text-muted">Nenhum item disponível para venda no momento.</p>
@@ -102,63 +73,33 @@
             <div class="text-center mt-3">
                 <a th:href="@{/mercado/vendas-diretas}" class="btn btn-gold">
                     <i class="fas fa-store me-2"></i>Ver Todos os Itens à Venda
-                </a>
-            </div>
+                </a>            </div>
         </div>
-        
-        <!-- Leilões Ativos -->
-        <div class="market-section mb-5" th:if="${not #lists.isEmpty(auctions)}">
+          <div class="market-section mb-5" th:if="${not #lists.isEmpty(auctions)}">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="rpg-font section-title mb-0">
                     <i class="fas fa-gavel me-2"></i>Leilões da Taverna
                 </h2>
-                <a th:href="@{/mercado/masmorra-dos-leiloes}" class="btn btn-sm btn-outline-secondary">
-                    Ver Todos <i class="fas fa-arrow-right ms-1"></i>
-                </a>
+                <div>
+                    <a th:href="@{/item/novo?type=AUCTION}" sec:authorize="isAuthenticated()" class="btn btn-sm btn-outline-secondary ms-2">
+                        <i class="fas fa-plus me-1"></i>Anunciar
+                    </a>
+                </div>
             </div>
-            
             <div class="auction-area p-3">
                 <div class="row g-4">
-                    <div class="col-md-6 col-lg-4" th:each="auction : ${auctions}">
-                        <div class="card product-card h-100 auction-item">
-                            <div class="product-img-container">
-                                <img th:if="${auction.imageUrl}" th:src="@{/images/{name}(name=${auction.imageUrl})}" class="product-img" alt="Imagem do Produto">
-                                <img th:unless="${auction.imageUrl}" th:src="@{/static/images/default-product.jpg}" class="product-img" alt="Imagem Padrão">
-                                <span class="badge product-category-badge bg-dark" th:text="${auction.category != null ? auction.category.displayName : 'Sem categoria'}">Categoria</span>
-                                <span class="badge bg-danger position-absolute start-0 top-0 m-2">
-                                    <i class="fas fa-gavel me-1"></i>Leilão
-                                </span>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title rpg-font" th:text="${auction.name}">Nome do Produto</h5>
-                                <p class="card-text text-truncate" th:text="${auction.description}">Descrição do produto...</p>
-                                
-                                <div class="auction-timer p-2 mb-2">
-                                    <i class="fas fa-hourglass-half me-1"></i>
-                                    <span class="countdown" th:data-end-date="${#temporals.format(auction.auctionEndDate, 'yyyy-MM-dd HH:mm:ss')}">--h --m</span>
-                                </div>
-                                
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="product-price" th:text="${'$' + #numbers.formatDecimal(auction.price != null ? auction.price : 0, 0, 'POINT', 2, 'COMMA')}">$0.00</span>
-                                    <a th:href="@{/item/{id}(id=${auction.id})}" class="btn btn-sm btn-gold">
-                                        <i class="fas fa-gavel me-1"></i>Ver Leilão
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <i class="fas fa-user me-1"></i>
-                                    <span th:text="${auction.seller.username}">Vendedor</span>
-                                </small>
-                                <small class="text-muted" th:text="${#temporals.format(auction.createdAt, 'dd/MM/yyyy')}">01/01/2023</small>
-                            </div>
-                        </div>
-                    </div>
+                    <th:block th:each="auction : ${auctions}">
+                        <div th:replace="~{fragments/product-cards :: auction-card(${auction})}"></div>
+                    </th:block>
                 </div>
+            </div>
+            <div class="text-center mt-3">
+                <a th:href="@{/mercado/masmorra-dos-leiloes}" class="btn btn-gold">
+                    <i class="fas fa-gavel me-2"></i>Ver Todos os Leilões
+                </a>
             </div>
         </div>
         
-        <!-- Links rápidos / Quadro de avisos -->
         <div class="market-section">
             <h2 class="rpg-font section-title">
                 <i class="fas fa-map-signs me-2"></i>Quadro de Avisos
@@ -223,8 +164,7 @@
                         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        
-                        let displayText = "";
+                          let displayText = "";
                         if(days > 0) displayText += days + "d ";
                         displayText += hours + "h " + minutes + "m";
                         
@@ -234,8 +174,39 @@
                 
                 updateCountdowns();
                 setInterval(updateCountdowns, 60000);
-            });
-        </script>
+            });            
+            function openImageModal(imgElement) {
+                if (imgElement.src.includes('default-product.jpg')) {
+                    return;
+                }
+                
+                const modal = document.getElementById('imageModal');
+                const modalImg = document.getElementById('modalImage');
+                  modal.style.display = 'block';
+                modalImg.src = imgElement.getAttribute('data-full-image') || imgElement.src;
+                
+                modal.onclick = function(event) {
+                    if (event.target === modal) {
+                        closeImageModal();
+                    }
+                }
+            }            
+            function closeImageModal() {
+                document.getElementById('imageModal').style.display = 'none';
+            }
+            
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeImageModal();
+                }
+            });        </script>
+        
+        <div id="imageModal" class="image-modal">
+            <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+            <div class="image-modal-content">
+                <img id="modalImage" src="" alt="Imagem do Produto">
+            </div>
+        </div>
     </th:block>
 </body>
 </html>

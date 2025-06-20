@@ -2,7 +2,7 @@
 
 /* Scroll header styling */
 .scroll-header {
-    background-image: url('../images/parchment-bg-light.jpg');
+    background-image: url('../images/bg-default.png');
     background-position: center;
     background-size: cover;
     padding: 1rem;
@@ -197,6 +197,46 @@ input[type="range"] {
 
 .border-legendary {
     border-color: #ff8000 !important;
+}
+
+/* Preview card styling */
+.product-preview-card {
+    max-width: 100%;
+    border: 2px solid #d2b48c;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.preview-img-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background-color: #f8f8f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.preview-img[src*="default-product.jpg"] {
+    object-fit: contain;
+}
+
+.preview-img:not([src*="default-product.jpg"]) {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+}
+
+/* Badge colors for rarities */
+.bg-purple {
+    background-color: #a335ee !important;
 }
 
 /* Responsive adjustments */

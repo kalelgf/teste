@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -21,35 +23,43 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/item")
-public class ProductController {
+public class ProductController {    private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     @Autowired
     private ProductService productService;
     
     @Autowired
     private UserService userService;
-      @Autowired
+    
+    @Autowired
     private FileStorageService fileStorageService;
     
-    // Exibe formulário para criar um novo produto com dados enriquecidos
     @GetMapping("/novo")
-    public String showCreateProductForm(Model model) {
+    public String showCreateProductForm(Model model, @RequestParam(required = false) String type) {
         try {
-            model.addAttribute("product", new Product());
+            Product product = new Product();
+            
+            if (type != null) {
+                try {
+                    ProductType productType = ProductType.valueOf(type.toUpperCase());
+                    product.setType(productType);
+                } catch (IllegalArgumentException e) {
+                    // Tipo inválido, ignora
+                }
+            }
+            
+            model.addAttribute("product", product);
             model.addAttribute("categories", ProductCategory.values());
             model.addAttribute("rarities", ItemRarity.values());
             model.addAttribute("types", ProductType.values());
-            
-            // Add information about magic properties if used in template
             model.addAttribute("magicProperties", MagicProperty.values());
-              return "product/create";
+            
+            return "product/create";
         } catch (Exception e) {
-            throw e; // Rethrow to see the error in browser
+            throw e;
         }
     }
-    
-    // Processa a criação de um novo produto com melhor validação e feedback
-    @PostMapping("/novo")
+      @PostMapping("/novo")
     public String createProduct(
             @ModelAttribute Product product,
             @RequestParam(required = false) MultipartFile image,
@@ -60,14 +70,12 @@ public class ProductController {
             RedirectAttributes redirectAttributes) {
         
         try {
-            // Busca o usuário atual para definir como vendedor
             Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
             if (userOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Usuário não encontrado no reino.");
                 return "redirect:/item/novo";
             }
             
-            // Verifica o tipo de anúncio e atribui o preço adequado
             if (product.getType() == ProductType.DIRECT_SALE) {
                 if (directSalePrice == null || directSalePrice.compareTo(BigDecimal.ZERO) <= 0) {
                     redirectAttributes.addFlashAttribute("error", "Por favor, informe um preço válido para venda direta.");
@@ -79,28 +87,23 @@ public class ProductController {
                     redirectAttributes.addFlashAttribute("error", "Por favor, informe um lance inicial válido para leilão.");
                     return "redirect:/item/novo";
                 }
-                  // Garantir que o preço é definido para leilões
                 product.setPrice(startingBid);
             }
             
-            // Processa a imagem do item
             if (image != null && !image.isEmpty()) {
                 String imageFilename = fileStorageService.storeFile(image);
                 product.setImageUrl(imageFilename);
+                log.debug("Imagem salva: {} -> {}", image.getOriginalFilename(), imageFilename);
             }
             
-            // Define propriedades mágicas se fornecidas
             if (magicProperties != null && magicProperties.length > 0) {
                 for (String property : magicProperties) {
                     product.addMagicProperty(MagicProperty.valueOf(property));
                 }
             }
             
-            // Define o status baseado no tipo de produto
             if (product.getType() == ProductType.AUCTION) {
-                product.setStatus(ProductStatus.AUCTION_ACTIVE);
-                
-                // Configure auction end date if not set
+                product.setStatus(ProductStatus.AUCTION_ACTIVE);                
                 if (product.getAuctionEndDate() == null) {
                     product.setAuctionEndDate(LocalDateTime.now().plusDays(7));
                 }
@@ -108,10 +111,7 @@ public class ProductController {
                 product.setStatus(ProductStatus.AVAILABLE);
             }
             
-            // Data de criação
             product.setCreatedAt(LocalDateTime.now());
-            
-            // Salva o produto
             productService.create(product, userOpt.get());
             
             redirectAttributes.addFlashAttribute("success", 
@@ -128,25 +128,22 @@ public class ProductController {
             return "redirect:/item/novo";
         }
     }
-      // Exibe detalhes de um produto
+    
     @GetMapping("/{id}")
     public String showProduct(@PathVariable String id, Model model, 
                             @AuthenticationPrincipal UserDetails currentUser) {
         Optional<Product> productOpt = productService.findById(id);
         if (productOpt.isEmpty()) {
-            return "error/404"; // Página não encontrada
+            return "error/404";
         }
         
         Product product = productOpt.get();
         model.addAttribute("product", product);
         
-        // Verifica se o produto foi vendido e se o usuário atual é o vendedor
         if (product.getStatus() == ProductStatus.SOLD || 
             product.getStatus() == ProductStatus.AUCTION_ENDED) {
             
-            // Se há usuário logado, verifica se é o vendedor
             if (currentUser != null) {
-                // Permite que o vendedor veja seus próprios itens vendidos
                 Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
                 if (userOpt.isPresent() && 
                     product.getSeller().getId().equals(userOpt.get().getId())) {
@@ -207,9 +204,8 @@ public class ProductController {
             return "redirect:/item/" + id;
         }
     }
-    
-    /**
-     * Processa lance em leilão - redireciona para checkout
+      /**
+     * Processa lance em leilão diretamente
      */
     @PostMapping("/{id}/lance")
     public String placeBid(
@@ -218,7 +214,43 @@ public class ProductController {
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
         
-        return "redirect:/checkout/lance/" + id + "?bidAmount=" + amount;
+        try {
+            // Busca o usuário atual
+            Optional<User> userOpt = userService.findByUsername(currentUser.getUsername());
+            if (userOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Usuário não encontrado.");
+                return "redirect:/item/" + id;
+            }
+            
+            // Busca o produto
+            Optional<Product> productOpt = productService.findById(id);
+            if (productOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Produto não encontrado.");
+                return "redirect:/marketplace";
+            }
+            
+            User bidder = userOpt.get();
+            Product product = productOpt.get();
+            
+            // Valida se o valor do lance é válido
+            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+                redirectAttributes.addFlashAttribute("error", "Por favor, informe um valor válido para o lance.");
+                return "redirect:/item/" + id;
+            }
+            
+            // Processa o lance usando o ProductService
+            productService.makeBid(product, bidder, amount);
+            
+            redirectAttributes.addFlashAttribute("success", 
+                "Lance de " + amount + " moedas realizado com sucesso! Que a sorte esteja com você, aventureiro!");
+            
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao processar lance: " + e.getMessage());
+        }
+        
+        return "redirect:/item/" + id;
     }
     
     // Exibe formulário de edição de produto

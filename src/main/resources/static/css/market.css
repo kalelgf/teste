@@ -90,7 +90,7 @@
 }
 
 .empty-inventory-container {
-    background-image: url('../images/parchment-bg.jpg');
+    background-image: url('../images/bg-default.png');
     background-position: center;
     background-size: cover;
     border: 2px solid var(--secondary-color);
@@ -130,7 +130,7 @@
 }
 
 .welcome-banner {
-    background-image: url('../images/parchment-bg.jpg');
+    background-image: url('../images/bg-default.png');
     background-position: center;
     background-size: cover;
     border: 2px solid var(--secondary-color);

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 
 @Configuration
@@ -16,14 +17,22 @@ public class DataInitializer {
     @Bean
     CommandLineRunner init(UserRepository userRepository, 
                           ProductRepository productRepository,
-                          PasswordEncoder passwordEncoder) {
-        return args -> {            System.out.println("=== Inicializando dados do MongoDB ===");
-            System.out.println("Usuários existentes: " + userRepository.count());
-            System.out.println("Produtos existentes: " + productRepository.count());
-
-            if (userRepository.count() == 0) {
-                System.out.println("Criando usuários iniciais...");
-                // Create admin user first
+                          PasswordEncoder passwordEncoder) {        return args -> {
+            System.out.println("=== Inicializando dados do MongoDB ===");
+            long userCount = userRepository.count();
+            long productCount = productRepository.count();
+            System.out.println("Usuários existentes: " + userCount);
+            System.out.println("Produtos existentes: " + productCount);
+            
+            // Vamos listar os usuários existentes para debug
+            if (userCount > 0) {
+                System.out.println("=== Usuários existentes no banco ===");
+                userRepository.findAll().forEach(user -> {
+                    System.out.println("Username: " + user.getUsername() + ", Email: " + user.getEmail() + ", Role: " + user.getRole());
+                });
+            }            // Verifica se o usuário admin existe, independente da quantidade de usuários
+            if (!userRepository.existsByUsername("admin")) {
+                System.out.println("Criando usuário admin...");
                 User admin = new User();
                 admin.setUsername("admin");
                 admin.setEmail("admin@rpgmarket.com");
@@ -35,6 +44,14 @@ public class DataInitializer {
                 admin.setRole(UserRole.ROLE_MESTRE);
                 userRepository.save(admin);
                 
+                System.out.println("✅ Usuário admin criado com sucesso!");
+            } else {
+                System.out.println("Usuário admin já existe no banco.");
+            }
+            
+            if (userCount == 0) {
+                System.out.println("Criando usuários iniciais adicionais...");
+                
                 // Create test buyer user
                 User buyer = new User();
                 buyer.setUsername("testuser");
@@ -42,13 +59,22 @@ public class DataInitializer {
                 buyer.setPassword(passwordEncoder.encode("password"));
                 buyer.setCharacterClass("Guerreiro");
                 buyer.setLevel(10);
-                buyer.setExperience(500);
-                buyer.setGoldCoins(new BigDecimal("1000"));
-                buyer.setRole(UserRole.ROLE_AVENTUREIRO);                userRepository.save(buyer);
-                
-                System.out.println("✅ Usuários criados:");
-                System.out.println("   - Admin: username='admin', password='admin'");
+                buyer.setExperience(500);                buyer.setGoldCoins(new BigDecimal("1000"));
+                buyer.setRole(UserRole.ROLE_AVENTUREIRO);
+                userRepository.save(buyer);                System.out.println("✅ Usuário testuser criado:");
                 System.out.println("   - Teste: username='testuser', password='password'");
+            } else {
+                System.out.println("Outros usuários já existem, pulando criação de usuário teste...");
+            }
+            
+            // Verificar se o usuário admin foi salvo corretamente
+            User savedAdmin = userRepository.findByUsername("admin").orElse(null);
+            if (savedAdmin != null) {
+                System.out.println("✅ Admin confirmado no banco: " + savedAdmin.getUsername());
+                System.out.println("   Password hash: " + savedAdmin.getPassword().substring(0, Math.min(10, savedAdmin.getPassword().length())) + "...");
+                System.out.println("   Role: " + savedAdmin.getRole());
+            } else {
+                System.out.println("❌ Erro: Admin não encontrado no banco!");
             }
             
             if (productRepository.count() == 0) {
@@ -77,9 +103,9 @@ public class DataInitializer {
                     product2.setCategory(ProductCategory.POCOES_ELIXIRES);
                     product2.setType(ProductType.AUCTION);
                     product2.setStatus(ProductStatus.AUCTION_ACTIVE);
-                    product2.setSeller(admin);
-                    product2.setRarity(ItemRarity.LENDARIO);
-                    product2.setAuctionEndDate(LocalDateTime.now().plusDays(7));                    productRepository.save(product2);
+                    product2.setSeller(admin);                    product2.setRarity(ItemRarity.LENDARIO);
+                    product2.setAuctionEndDate(LocalDateTime.now().plusDays(7));
+                    productRepository.save(product2);
                     
                     System.out.println("✅ Produtos criados:");
                     System.out.println("   - Espada Longa Encantada (Venda Direta): R$ 150,00");

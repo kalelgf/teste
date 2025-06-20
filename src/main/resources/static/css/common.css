@@ -19,7 +19,7 @@ body.rpg-theme {
     background-color: var(--bg-color);
     color: var(--text-color);
     /* Corrigido para caminhos relativos corretos */
-    background-image: url('../images/parchment-bg.jpg');
+    background-image: url('../images/bg-default.png?v=2');
     background-attachment: fixed;
     display: flex;
     flex-direction: column;

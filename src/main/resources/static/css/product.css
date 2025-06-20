@@ -25,8 +25,20 @@
     transition: transform 0.5s;
 }
 
+/* Estilo específico para imagem padrão de produtos */
+.product-img[src*="default-product.jpg"] {
+    object-fit: contain !important;
+    padding: 10px;
+    background-color: #f8f5e6;
+}
+
 .product-card:hover .product-img {
     transform: scale(1.05);
+}
+
+/* Não aplicar zoom na imagem padrão */
+.product-card:hover .product-img[src*="default-product.jpg"] {
+    transform: none !important;
 }
 
 .product-category-badge {
@@ -59,9 +71,45 @@
     color: white;
 }
 
+/* Badge de raridade - posicionamento específico */
+.badge-rarity {
+    top: 45px !important;
+    z-index: 2;
+}
+
+/* Badge de tipo (leilão/venda direta) - posicionamento */
+.badge-type {
+    top: 0 !important;
+    z-index: 3;
+}
+
+/* Badge de categoria - posicionamento */
+.badge-category {
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 1;
+}
+
 /* Bordas de raridade para o preview do item */
 .border-comum { border-color: #6c757d !important; }
 .border-incomum { border-color: #28a745 !important; }
 .border-raro { border-color: #007bff !important; }
 .border-epico { border-color: #9c27b0 !important; }
 .border-lendario { border-color: #ffc107 !important; }
+
+/* Melhorar responsividade da página de detalhes */
+@media (max-width: 991.98px) {
+    .col-lg-8.mb-4, .col-lg-4.mb-4 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .product-img-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .product-img-container {
+        height: 200px;
+    }
+}

@@ -1,10 +1,15 @@
 :root {
     --primary-color: #6f4e37;     /* Brown for wood themes */
     --secondary-color: #d4af37;   /* Gold for accents */
-    --text-color: #333;
+    --text-color: #2c2c2c;        /* Darker text for better readability */
+    --text-light: #5a5a5a;        /* Light text for secondary content */
     --bg-color: #f5f5dc;          /* Beige parchment background */
     --accent-red: #8b0000;        /* Dark red for special elements */
     --accent-green: #2e8b57;      /* Forest green */
+    --border-color: #d2b48c;      /* Light brown for borders */
+    --shadow-light: rgba(0,0,0,0.1);
+    --shadow-medium: rgba(0,0,0,0.15);
+    --shadow-dark: rgba(0,0,0,0.25);
 }
 
 /* Base styles */
@@ -12,7 +17,7 @@ body.rpg-theme {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    background-image: url('../images/parchment-bg.jpg');
+    background-image: url('../images/bg-default.png?v=2');
     background-attachment: fixed;
     position: relative;
 }
@@ -23,19 +28,25 @@ body.rpg-theme {
 
 /* RPG-themed UI components */
 .btn-gold {
-    background-color: var(--secondary-color);
-    color: #333;
-    border-color: #b8860b;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.2s;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #2c2c2c;  /* Darker text for better contrast */
+    border: 2px solid #DAA520;
+    box-shadow: 0 3px 6px var(--shadow-light);
+    transition: all 0.3s ease;
+    font-weight: 600;
 }
 
 .btn-gold:hover {
-    background-color: #b8860b;
-    color: white;
-    border-color: #8b6914;
+    background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+    color: #1a1a1a;  /* Even darker on hover */
+    border-color: #CD853F;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 12px var(--shadow-medium);
+}
+
+.btn-gold:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px var(--shadow-light);
 }
 
 .border-gold {
@@ -44,7 +55,12 @@ body.rpg-theme {
 
 .bg-gold {
     background-color: var(--secondary-color) !important;
-    color: #333;
+    color: #2c2c2c;  /* Better contrast */
+}
+
+.badge-gold {
+    background-color: var(--secondary-color) !important;
+    color: #2c2c2c;  /* Better contrast */
 }
 
 .text-gold-translucent {
@@ -149,8 +165,20 @@ body.rpg-theme {
     transition: transform 0.5s;
 }
 
+/* Estilo específico para imagem padrão de produtos */
+.product-img[src*="default-product.jpg"] {
+    object-fit: contain !important;
+    padding: 10px;
+    background-color: #f8f5e6;
+}
+
 .product-card:hover .product-img {
     transform: scale(1.05);
+}
+
+/* Não aplicar zoom na imagem padrão para melhor legibilidade */
+.product-card:hover .product-img[src*="default-product.jpg"] {
+    transform: none !important;
 }
 
 .product-category-badge {

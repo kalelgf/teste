@@ -17,12 +17,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
     
     @Autowired
-    private FileStorageProperties fileStorageProperties;
-    
-    @Override
+    private FileStorageProperties fileStorageProperties;    @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         try {
-            // First handle the dynamic uploaded images
+            // Handle dynamic uploaded images first
             String uploadDir = fileStorageProperties.getUploadDir();
             logger.info("Upload directory from properties: {}", uploadDir);
             
@@ -30,20 +28,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
                 logger.info("Configured resource handler for path: {}", uploadPath);
                 
-                // This will handle uploaded images
-                registry.addResourceHandler("/images/**")
+                // This will handle uploaded images with different pattern
+                registry.addResourceHandler("/uploads/**")
                         .addResourceLocations("file:" + uploadPath.toString() + "/")
-                        .setCachePeriod(3600)
-                        .resourceChain(true);
-                
-                // This will handle static images from resources/static/images
-                registry.addResourceHandler("/static/images/**")
-                        .addResourceLocations("classpath:/static/images/")
                         .setCachePeriod(3600)
                         .resourceChain(true);
             } else {
                 logger.error("Upload directory is null or empty! Check your application.properties");
             }
+            
+            // Handle static images from resources/static/images (default Spring Boot behavior)
+            // This should work automatically, but let's add it explicitly
+            registry.addResourceHandler("/images/**")
+                    .addResourceLocations("classpath:/static/images/")
+                    .setCachePeriod(3600);
+                    
         } catch (Exception e) {
             logger.error("Error configuring resource handler: {}", e.getMessage(), e);
         }

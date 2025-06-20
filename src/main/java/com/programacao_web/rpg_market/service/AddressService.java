@@ -45,9 +45,7 @@ public class AddressService {
         }
         
         return deliveryAddressRepository.save(address);
-    }
-
-    /**
+    }    /**
      * Update an existing address
      */
     public DeliveryAddress updateAddress(String addressId, String userId, DeliveryAddress updatedAddress) {

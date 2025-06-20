@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "rpg.market.file")
+@ConfigurationProperties(prefix = "app.upload")
 public class FileStorageProperties {
     
     private String uploadDir;
