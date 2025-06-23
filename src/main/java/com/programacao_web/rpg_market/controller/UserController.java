@@ -190,13 +190,11 @@ public class UserController {
         model.addAttribute("user", userOpt.get());
         return "user/edit-profile"; // Return direct template path
     }
-    
-    // Processa a edição do perfil
+      // Processa a edição do perfil
     @PostMapping("/editar-perfil")
     public String updateProfile(
             @ModelAttribute User updatedUser,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
-            @RequestParam(value = "croppedImage", required = false) String croppedImageData,
             @AuthenticationPrincipal UserDetails currentUser,
             RedirectAttributes redirectAttributes) {
         
@@ -208,19 +206,9 @@ public class UserController {
             
             User user = userOpt.get();
             
-            // Processar o upload da imagem do perfil
-            if (croppedImageData != null && !croppedImageData.isEmpty()) {
-                // Processar a imagem recortada do data URL
-                String imageFilename = fileStorageService.storeBase64Image(croppedImageData, "profile");
-                
-                // Remover imagem anterior se existir
-                if (user.getProfileImageUrl() != null) {
-                    fileStorageService.deleteFile(user.getProfileImageUrl());
-                }
-                
-                user.setProfileImageUrl(imageFilename);
-            } else if (profileImage != null && !profileImage.isEmpty()) {
-                // Caso não tenha recortado, apenas redimensionar e salvar
+            // Processar o upload direto da imagem do perfil
+            if (profileImage != null && !profileImage.isEmpty()) {
+                // Redimensionar e salvar a imagem
                 String imageFilename = fileStorageService.storeAndResizeImage(profileImage, 200, 200);
                 
                 // Remover imagem anterior se existir

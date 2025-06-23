@@ -170,13 +170,17 @@
 
 .img-container {
     max-height: 60vh;
-    background-color: #f0f0f0;
+    width: 100%;
+    background-color: #f8f9fa;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .img-container img {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 500px;
     display: block;
 }
 
@@ -186,8 +190,12 @@
 }
 
 #cropModal .modal-body {
-    padding: 0;
-    background-color: #333;
+    padding: 10px;
+    background-color: #f8f5e6;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Estilo para o botão de upload da imagem de perfil */
