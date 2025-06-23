@@ -217,3 +217,137 @@
         padding: 15px;
     }
 }
+
+/* Market grid responsiveness */
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+/* Filtros responsivos */
+.filter-sidebar {
+    margin-bottom: 1.5rem;
+}
+
+/* Responsividade para grid de produtos */
+@media (max-width: 1199px) {
+    .market-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 15px;
+    }
+}
+
+@media (max-width: 991px) {
+    .market-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .category-card {
+        margin-bottom: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .market-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+    }
+    
+    /* Ajuste para filtros em mobile */
+    .filter-sidebar {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-sidebar .card-title {
+        font-size: 1rem;
+    }
+    
+    /* Reduzir o espaço entre categorias */
+    .category-card {
+        padding: 0.75rem;
+    }
+    
+    .category-icon {
+        font-size: 1.5rem;
+    }
+    
+    .category-title {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 575px) {
+    /* Grid em smartphones */
+    .market-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    /* Reduz espaçamento em telas pequenas */
+    .market-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Filtros em mobile */
+    .filter-sidebar .form-group {
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-sidebar label {
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    /* Navegação de paginação menor */
+    .pagination .page-link {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.65rem;
+    }
+}
+
+/* Layout responsivo para filtros e resultados */
+@media (min-width: 992px) {
+    .market-container {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .filter-column {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+    
+    .results-column {
+        flex: 0 0 75%;
+        max-width: 75%;
+        padding-left: 1.5rem;
+    }
+}
+
+/* Botões de filtro responsivos para mobile */
+@media (max-width: 991px) {
+    .filter-toggle-btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-sidebar {
+        margin-bottom: 1rem;
+        transition: max-height 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .filter-sidebar.collapsed {
+        max-height: 0;
+    }
+}

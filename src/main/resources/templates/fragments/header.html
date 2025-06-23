@@ -6,16 +6,15 @@
                 <a class="navbar-brand rpg-font" th:href="@{/mercado}">
                     <i class="fas fa-dragon me-2"></i>RPG Market
                 </a>
-                
-                <!-- User dropdown for mobile (always visible) -->
-                <ul class="navbar-nav d-lg-none" sec:authorize="isAuthenticated()">
+                  <!-- User dropdown for mobile (always visible) -->
+                <ul class="navbar-nav d-lg-none ms-auto me-4" sec:authorize="isAuthenticated()">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdownMobile" role="button" 
                            data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                             <img th:src="${@userService.getCurrentUserProfileImageUrl() != null ? 
                                  '/images/' + @userService.getCurrentUserProfileImageUrl() : 
                                  '/static/images/default-user.jpg'}"
-                                 class="user-avatar me-2" 
+                                 class="user-avatar me-1" 
                                  alt="Avatar do Aventureiro"
                                  onerror="this.style.backgroundImage='url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTUiIGN5PSIxNSIgcj0iMTUiIGZpbGw9IiNkNGFmMzciLz4KPHBhdGggZD0iTTE1IDhDMTIuNzkgOCAxMSA5Ljc5IDExIDEyQzExIDE0LjIxIDEyLjc5IDE2IDE1IDE2QzE3LjIxIDE2IDE5IDE0LjIxIDE5IDEyQzE5IDkuNzkgMTcuMjEgOCAxNSA4WiIgZmlsbD0iIzJjMmMyYyIvPgo8cGF0aCBkPSJNMTUgMThDMTEuNjkgMTggOSAyMC42OSA5IDI0VjI2SDE1SDIxVjI0QzIxIDIwLjY5IDE4LjMxIDE4IDE1IDE4WiIgZmlsbD0iIzJjMmMyYyIvPgo8L3N2Zz4K)'; this.style.backgroundSize='cover'; this.src='';">
                             <span class="d-none d-sm-inline" sec:authentication="name">User</span>

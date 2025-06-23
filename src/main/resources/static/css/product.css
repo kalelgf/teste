@@ -4,6 +4,9 @@
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     transition: all 0.3s;
     border: 1px solid #d2b48c;
+    height: 100%;  /* Garantir que todos os cards tenham a mesma altura */
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
@@ -111,5 +114,70 @@
 @media (max-width: 767.98px) {
     .product-img-container {
         height: 200px;
+    }
+}
+
+/* Product card responsiveness */
+.product-card .card-body {
+    flex: 1 0 auto;  /* Permite que o corpo do card se expanda */
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card .card-footer {
+    margin-top: auto;  /* Empurra o footer para o final do card */
+}
+
+/* Títulos responsivos */
+.product-card .card-title {
+    font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    min-height: 2.75rem;  /* Altura mínima para 2 linhas de texto */
+}
+
+/* Descrição responsiva com ellipsis */
+.product-card .card-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+/* Responsividade para detalhes de produto */
+.product-detail-container {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .product-detail-container {
+        flex-direction: row;
+    }
+    
+    .product-detail-img-container {
+        flex: 0 0 40%;
+        margin-right: 2rem;
+    }
+    
+    .product-detail-info {
+        flex: 1;
+    }
+}
+
+@media (max-width: 767px) {
+    .product-detail-img-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Ajuste para layout mobile nos detalhes */
+    .product-detail-img {
+        max-height: 250px;
+        width: 100%;
+        object-fit: contain;
     }
 }

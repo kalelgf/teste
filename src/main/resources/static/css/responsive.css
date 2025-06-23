@@ -7,6 +7,9 @@
    2. Footer reduzido em telas pequenas
    3. Imagem padrão para usuários sem avatar
    4. Melhorias gerais de layout mobile
+   5. Grid responsivo para produtos
+   6. Formulários otimizados para mobile
+   7. Adaptações para diferentes tamanhos de tela (mobile, tablet, desktop)
 */
 
 /* ===== HEADER RESPONSIVO ===== */
@@ -733,26 +736,16 @@ html, body {
 /* ===== CORREÇÕES ESPECÍFICAS PARA DROPDOWN DO USUÁRIO ===== */
 
 /* Mobile - Dropdown do usuário fora do collapse */
-@media (max-width: 991.98px) {    
-    /* Dropdown do usuário em mobile - sempre visível */
-    .navbar-nav.d-lg-none {
-        position: absolute;
-        right: 70px; /* Mais espaço para o toggler */
-        top: 50%;
-        transform: translateY(-50%);
+@media (max-width: 991.98px) {      /* Dropdown do usuário em mobile - sempre visível */    .navbar-nav.d-lg-none {        position: fixed;
+        right: 140px; /* Aumentado o espaço para o toggler */
+        top: 15px; /* Valor fixo em vez de porcentagem relativa */
         z-index: 1031;
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
     }
     
-    /* Ocultar avatar quando menu principal está aberto */
-    .navbar-toggler[aria-expanded="true"] ~ .navbar-nav.d-lg-none {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
+    /* Ocultar avatar quando menu principal está aberto */    /* Removemos a regra que esconde o avatar quando o menu está expandido para que ele fique sempre visível */
       /* Dropdown menu melhor estilizado em mobile */
     .navbar-nav.d-lg-none .dropdown-menu {
         position: absolute;
@@ -1367,4 +1360,315 @@ img[src*="/images/default-product.jpg"]:hover,
     align-items: center;
     justify-content: center;
     background-color: #f8f5e6;
+}
+
+/* ===== PRODUTO CARDS RESPONSIVOS ===== */
+@media (max-width: 1199px) {
+    .product-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .product-img-container {
+        height: 180px; /* Altura reduzida para tablets */
+    }
+}
+
+@media (max-width: 991px) {
+    .product-img-container {
+        height: 160px;
+    }
+    
+    .container {
+        max-width: 95%;
+    }
+    
+    /* Ajustar tamanho de fonte em telas médias */
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.75rem;
+    }
+}
+
+/* ===== SMALL DEVICES (SMARTPHONES) ===== */
+@media (max-width: 576px) {
+    /* Ajuste para formulários em mobile */
+    .form-group, .form-control, .input-group {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Botões em mobile - ocupar toda a largura */
+    .btn-block-mobile {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Menor padding nas grids */
+    .row {
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+    
+    [class*="col-"] {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    
+    /* Cards responsivos para grid de produtos em mobile */
+    .product-card {
+        margin-bottom: 1rem;
+    }
+    
+    .product-img-container {
+        height: 150px;
+    }
+    
+    /* Texto menor para economizar espaço */
+    .product-card .card-title {
+        font-size: 1rem;
+        margin-bottom: 0.35rem;
+    }
+    
+    .product-card .card-text {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Preço e outros elementos compactos */
+    .product-price {
+        font-size: 1.1rem;
+    }
+    
+    /* Padding reduzido no card body */
+    .product-card .card-body {
+        padding: 0.75rem;
+    }
+    
+    /* Badges e etiquetas menores */
+    .badge {
+        font-size: 70%;
+        padding: 0.3em 0.5em;
+    }
+    
+    /* Tabelas responsivas em dispositivos pequenos */
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+    
+    /* Modal em tela cheia para mobile */
+    .modal-fullscreen-mobile {
+        margin: 0;
+        padding: 0 !important;
+    }
+    
+    .modal-fullscreen-mobile .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-fullscreen-mobile .modal-content {
+        border: none;
+        border-radius: 0;
+        height: 100%;
+    }
+}
+
+/* ===== TABELAS RESPONSIVAS ===== */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+    /* Tornar tabelas visualmente melhores em mobile */
+    .table-responsive-stack {
+        display: block;
+    }
+    
+    .table-responsive-stack thead {
+        display: none;
+    }
+    
+    .table-responsive-stack tbody tr {
+        display: block;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .table-responsive-stack td {
+        display: block;
+        text-align: right;
+        border-top: none;
+        position: relative;
+        padding: 0.75rem 0.75rem 0.75rem 35%;
+    }
+    
+    .table-responsive-stack td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.75rem;
+        width: 30%;
+        padding-right: 10px;
+        text-align: left;
+        font-weight: bold;
+    }
+    
+    /* Ajustar paginação para tabelas */
+    .dataTables_paginate .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .dataTables_paginate .page-link {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .dataTables_length, 
+    .dataTables_filter {
+        text-align: center !important;
+        margin-bottom: 1rem;
+    }
+}
+
+/* ===== IMAGENS RESPONSIVAS ===== */
+.img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Imagens de perfil responsivas */
+.profile-img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #d4af37;
+}
+
+@media (max-width: 767px) {
+    .profile-img {
+        width: 120px;
+        height: 120px;
+        border-width: 2px;
+    }
+}
+
+@media (max-width: 575px) {
+    .profile-img {
+        width: 90px;
+        height: 90px;
+    }
+    
+    /* Imagens menores em mobile */
+    .img-mobile-smaller {
+        max-width: 85%;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+/* ===== SCROLLBARS CUSTOMIZADAS ===== */
+/* Para WebKit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d4af37;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6f4e37;
+}
+
+/* ===== PRINT MEDIA ===== */
+@media print {
+    header, 
+    footer, 
+    .no-print, 
+    .navbar, 
+    .sidebar {
+        display: none !important;
+    }
+    
+    body {
+        background-image: none !important;
+        background-color: #fff !important;
+        color: #000 !important;
+        font-size: 12pt;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Melhorias para o navbar em mobile */
+@media (max-width: 575px) {
+    /* Aumentar o hit area do navbar toggler */
+    .navbar-toggler {
+        padding: 0.5rem 0.75rem;
+        margin-left: 0.5rem;
+    }
+    
+    /* Reduzir o tamanho do user-avatar em telas pequenas */
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+    }
+    
+    /* Manter separação entre user dropdown e navbar toggler */
+    .navbar-nav.d-lg-none {
+        margin-right: 10px;
+    }
+    
+    /* Ajustar posicionamento do dropdown menu */
+    .navbar-nav.d-lg-none .dropdown-menu {
+        left: auto;
+        right: 0;
+    }
+}
+
+/* Espaçamento do navbar para telas ultra pequenas */
+@media (max-width: 360px) {
+    .navbar-brand {
+        font-size: 1.2rem !important;
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Ainda mais espaço entre elementos */
+    .navbar-nav.d-lg-none {
+        right: 65px;
+    }
+    
+    /* Diminuir ícone do usuário */
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+    }
 }

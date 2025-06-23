@@ -211,3 +211,158 @@
 .upload-avatar-btn:hover {
     transform: scale(1.1);
 }
+
+/* Responsividade para perfil de usuário */
+@media (max-width: 991px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .profile-avatar {
+        margin-bottom: 1rem;
+    }
+    
+    .profile-stats {
+        margin-top: 1.5rem;
+    }
+}
+
+@media (max-width: 767px) {
+    /* Ajustes para cartões de usuário em telas pequenas */
+    .user-card {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .user-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .user-hero .icon {
+        font-size: 2.5rem;
+    }
+    
+    .user-hero .title {
+        font-size: 1.5rem;
+    }
+    
+    /* Estatísticas do perfil em coluna */
+    .profile-stats-row {
+        flex-direction: column;
+    }
+    
+    .profile-stat {
+        margin-bottom: 1rem;
+        border-left: none;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-left: 0;
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Nomes e valores estatísticos lado a lado */
+    .profile-stat-name, .profile-stat-value {
+        display: inline-block;
+    }
+    
+    .profile-stat-name {
+        margin-right: 0.5rem;
+    }
+}
+
+@media (max-width: 575px) {
+    /* Formulários de usuário em telas pequenas */
+    .user-card {
+        border-radius: 0;
+        box-shadow: none;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .user-card .card-body {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .user-hero {
+        margin-bottom: 1.25rem;
+    }
+    
+    .user-hero .title {
+        font-size: 1.35rem;
+    }
+    
+    .user-hero .subtitle {
+        font-size: 0.9rem;
+    }
+    
+    /* Ajustes para campos de formulário */
+    .form-control, .input-group-text {
+        font-size: 0.95rem;
+    }
+    
+    .btn {
+        font-size: 0.95rem;
+    }
+    
+    /* Redução de espaço em elementos de perfil */
+    .profile-bio {
+        font-size: 0.9rem;
+    }
+    
+    .character-class-selector {
+        flex-wrap: wrap;
+    }
+    
+    .character-class-option {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* Layout responsivo para dashboard de usuário */
+@media (min-width: 992px) {
+    .user-dashboard {
+        display: flex;
+    }
+    
+    .dashboard-sidebar {
+        flex: 0 0 250px;
+        margin-right: 2rem;
+    }
+    
+    .dashboard-content {
+        flex: 1;
+    }
+}
+
+@media (max-width: 991px) {
+    .dashboard-sidebar {
+        margin-bottom: 1.5rem;
+    }
+    
+    .dashboard-nav {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+    
+    .dashboard-nav-item {
+        margin-right: 1rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Responsive avatar and image upload */
+@media (max-width: 575px) {
+    .profile-avatar-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar-upload-btn {
+        font-size: 0.85rem;
+        padding: 0.3rem 0.6rem;
+    }
+}
